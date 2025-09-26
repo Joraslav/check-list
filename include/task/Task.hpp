@@ -12,8 +12,11 @@ namespace fs = std::filesystem;
 
 using std::string_literals::operator""s;
 
-const std::string CONFIG_NAME = "/config_todo.json"s;
-const std::string OUTPUT_DIR = "../config"s;
+const std::string CONFIG_DIR = "../config"s;
+const std::string CONFIG_NAME = "config_todo.json"s;
+
+const std::string OUTPUT_DIR = "../notepad"s;
+const std::string DEFAULT_LIST = "checklist.json"s;
 
 struct Task {
     std::string text;
@@ -27,23 +30,32 @@ class TaskManager {
  public:
     using json = nlohmann::json;
 
-    TaskManager(const std::string& filename = "checklist.json"s);
+    TaskManager();
 
+    void LoadTasksFromFile(const std::string& filename);
     void AddTask(const std::string& text);
     void AddTask(const Task& task);
     void ToggleTask(size_t index);
+    void RemoveTask(size_t index);
+    void EditTask(size_t index, const std::string& new_text);
+    bool TaskExists(size_t index) const;
     void Save() const;
+    
+    // Методы для получения информации
+    const std::vector<Task>& GetTasks() const;
+    void PrintTasks() const;
+    void PrintTasks(bool only_completed) const;
 
     static void SetPath(const std::string& path);
     static void SetName(const std::string& name);
 
  private:
     std::vector<Task> tasks_;
-    fs::path path_;
+    std::string path_;
     std::string filename_;
+    std::string full_name_;
 };
 
-void MakeDefaultConfig(const std::string& dir = OUTPUT_DIR,
-                       const std::string& name = "checklist.json"s);
+void MakeDefaultConfig();
 
 }  // namespace task

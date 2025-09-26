@@ -3,23 +3,78 @@
 #include <format>
 #include <fstream>
 #include <stdexcept>
+#include <iostream>
 
 namespace task {
 
-TaskManager::TaskManager(const std::string& filename) {
-    std::ifstream fin(filename);
+TaskManager::TaskManager() {
+    const std::string full_name = CONFIG_DIR + "/" + CONFIG_NAME;
+    std::ifstream fin(full_name);
     if (!fin) {
         const std::string error_message = std::format(
-            "Failed to open file: {}\nSelect file with command: todo file <path-to-file>",
-            filename);
+            "Failed to open config file: {}\nSelect config file with command: todo config "
+            "<path-to-dir>",
+            full_name);
         throw std::runtime_error(error_message);
     }
 
     json j = json::parse(fin);
 
-    for (const auto& item : j) {
-        tasks_.push_back({item["text"], item["done"]});
+    path_ = static_cast<std::string>(j["path"]);
+    filename_ = static_cast<std::string>(j["name"]);
+
+    fin.close();
+
+    full_name_ = path_ + "/" + filename_;
+    LoadTasksFromFile(full_name_);
+}
+
+void TaskManager::LoadTasksFromFile(const std::string& filename) {
+    // Проверяем существование файла
+    if (!fs::exists(filename)) {
+        // Если файл не существует, создаем пустой вектор задач
+        tasks_.clear();
+        return;
     }
+    
+    std::ifstream fin(filename);
+    if (!fin) {
+        const std::string error_message = std::format(
+            "Failed to open list file: {}\nSelect: todo list <name-your-todo-list>", filename);
+        throw std::runtime_error(error_message);
+    }
+
+    try {
+        json j = json::parse(fin);
+        
+        // Проверяем, что JSON является массивом
+        if (!j.is_array()) {
+            fin.close();
+            const std::string error_message = std::format(
+                "Invalid file format in {}: expected an array of tasks", filename);
+            throw std::runtime_error(error_message);
+        }
+
+        tasks_.clear();
+        for (const auto& task : j) {
+            // Проверяем, что каждый элемент имеет необходимые поля
+            if (task.contains("text") && task.contains("done")) {
+                tasks_.push_back(Task(task["text"], task["done"]));
+            } else {
+                fin.close();
+                const std::string error_message = std::format(
+                    "Invalid task format in {}: missing 'text' or 'done' field", filename);
+                throw std::runtime_error(error_message);
+            }
+        }
+    } catch (const json::parse_error& e) {
+        fin.close();
+        const std::string error_message = std::format(
+            "Failed to parse JSON in file {}: {}", filename, e.what());
+        throw std::runtime_error(error_message);
+    }
+
+    fin.close();
 }
 
 void TaskManager::AddTask(const std::string& text) { tasks_.emplace_back(text, false); }
@@ -36,23 +91,131 @@ void TaskManager::ToggleTask(size_t index) {
     tasks_[index].done = !tasks_[index].done;
 }
 
+bool TaskManager::TaskExists(size_t index) const {
+    return index < tasks_.size();
+}
+
+void TaskManager::RemoveTask(size_t index) {
+    if (index >= tasks_.size()) {
+        const std::string error_message = std::format(
+            "Task with index {} does not exist.\nRecheck list and choose different task index",
+            index);
+        throw std::out_of_range(error_message);
+    }
+    tasks_.erase(tasks_.begin() + index);
+}
+
+void TaskManager::EditTask(size_t index, const std::string& new_text) {
+    if (index >= tasks_.size()) {
+        const std::string error_message = std::format(
+            "Task with index {} does not exist.\nRecheck list and choose different task index",
+            index);
+        throw std::out_of_range(error_message);
+    }
+    tasks_[index].text = new_text;
+}
+
+const std::vector<Task>& TaskManager::GetTasks() const {
+    return tasks_;
+}
+
+void TaskManager::PrintTasks() const {
+    if (tasks_.empty()) {
+        std::cout << "No tasks found.\n";
+        return;
+    }
+    
+    for (size_t i = 0; i < tasks_.size(); ++i) {
+        std::cout << i << ". ";
+        if (tasks_[i].done) {
+            std::cout << "[x] ";
+        } else {
+            std::cout << "[ ] ";
+        }
+        std::cout << tasks_[i].text << "\n";
+    }
+}
+
+void TaskManager::PrintTasks(bool only_completed) const {
+    if (tasks_.empty()) {
+        std::cout << "No tasks found.\n";
+        return;
+    }
+    
+    bool found = false;
+    for (size_t i = 0; i < tasks_.size(); ++i) {
+        if (only_completed == tasks_[i].done) {
+            std::cout << i << ". ";
+            if (tasks_[i].done) {
+                std::cout << "[x] ";
+            } else {
+                std::cout << "[ ] ";
+            }
+            std::cout << tasks_[i].text << "\n";
+            found = true;
+        }
+    }
+    
+    if (!found) {
+        if (only_completed) {
+            std::cout << "No completed tasks found.\n";
+        } else {
+            std::cout << "No pending tasks found.\n";
+        }
+    }
+}
+
 void TaskManager::Save() const {
     json j = json::array();
     for (const Task& task : tasks_) {
         j.push_back({{"text", task.text}, {"done", task.done}});
     }
 
-    std::ofstream fout(filename_);
+    // Проверяем существование директории и создаем её при необходимости
+    const fs::path dir_path = fs::path(full_name_).parent_path();
+    if (!dir_path.empty() && !fs::exists(dir_path)) {
+        std::error_code ec;
+        fs::create_directories(dir_path, ec);
+        if (ec) {
+            const std::string error_message =
+                std::format("Failed to create directory {}: {}", dir_path.string(), ec.message());
+            throw std::runtime_error(error_message);
+        }
+    }
+
+    std::ofstream fout(full_name_);
     if (!fout) {
         const std::string error_message =
-            std::format("Failed to open file for writing: {}", filename_);
+            std::format("Failed to open file for writing: {}", full_name_);
         throw std::runtime_error(error_message);
     }
     fout << j.dump(4);
+    fout.close();
+    
+    // Проверяем, что файл был успешно записан
+    if (fout.fail()) {
+        const std::string error_message =
+            std::format("Failed to write data to file: {}", full_name_);
+        throw std::runtime_error(error_message);
+    }
 }
 
 void TaskManager::SetPath(const std::string& path) {
-    std::ifstream fin(CONFIG_NAME);
+    const std::string full_name = CONFIG_DIR + "/" + CONFIG_NAME;
+    
+    // Проверяем существование директории конфигурации и создаем её при необходимости
+    const fs::path config_dir = fs::path(CONFIG_DIR);
+    if (!fs::exists(config_dir)) {
+        std::error_code ec;
+        fs::create_directories(config_dir, ec);
+        if (ec) {
+            const std::string error_message =
+                std::format("Failed to create config directory {}: {}", CONFIG_DIR, ec.message());
+            throw std::runtime_error(error_message);
+        }
+    }
+    
+    std::ifstream fin(full_name);
     json j;
 
     if (fin) {
@@ -68,19 +231,40 @@ void TaskManager::SetPath(const std::string& path) {
 
     j["path"] = path;
 
-    std::ofstream fout(CONFIG_NAME);
+    std::ofstream fout(full_name);
     if (!fout) {
-        const fs::path dir_path = fs::path(CONFIG_NAME);
+        const fs::path dir_path = fs::path(full_name);
         const std::string error_message = std::format("Failed to open config file for writing: {}",
                                                       fs::absolute(dir_path).string());
         throw std::runtime_error(error_message);
     }
     fout << j.dump(4);
     fout.close();
+    
+    // Проверяем, что файл был успешно записан
+    if (fout.fail()) {
+        const std::string error_message =
+            std::format("Failed to write data to config file: {}", full_name);
+        throw std::runtime_error(error_message);
+    }
 }
 
 void TaskManager::SetName(const std::string& name) {
-    std::ifstream fin(CONFIG_NAME);
+    const std::string full_name = CONFIG_DIR + "/" + CONFIG_NAME;
+    
+    // Проверяем существование директории конфигурации и создаем её при необходимости
+    const fs::path config_dir = fs::path(CONFIG_DIR);
+    if (!fs::exists(config_dir)) {
+        std::error_code ec;
+        fs::create_directories(config_dir, ec);
+        if (ec) {
+            const std::string error_message =
+                std::format("Failed to create config directory {}: {}", CONFIG_DIR, ec.message());
+            throw std::runtime_error(error_message);
+        }
+    }
+    
+    std::ifstream fin(full_name);
     json j;
 
     if (fin) {
@@ -96,32 +280,67 @@ void TaskManager::SetName(const std::string& name) {
 
     j["name"] = name;
 
-    std::ofstream fout(CONFIG_NAME);
+    std::ofstream fout(full_name);
     if (!fout) {
-        const fs::path dir_path = fs::path(CONFIG_NAME);
+        const fs::path dir_path = fs::path(full_name);
         const std::string error_message = std::format("Failed to open config file for writing: {}",
                                                       fs::absolute(dir_path).string());
         throw std::runtime_error(error_message);
     }
     fout << j.dump(4);
     fout.close();
+    
+    // Проверяем, что файл был успешно записан
+    if (fout.fail()) {
+        const std::string error_message =
+            std::format("Failed to write data to config file: {}", full_name);
+        throw std::runtime_error(error_message);
+    }
 }
 
 // ------- Функции -------
-void MakeDefaultConfig(const std::string& dir, const std::string& name) {
+
+void MakeDefaultConfig() {
     using nlohmann::json;
 
-    fs::create_directory(dir);
-    const std::string config_name = dir + CONFIG_NAME;
+    // Создаем директории с проверкой ошибок
+    std::error_code ec;
+    fs::create_directory(CONFIG_DIR, ec);
+    if (ec) {
+        const std::string error_message =
+            std::format("Failed to create config directory {}: {}", CONFIG_DIR, ec.message());
+        throw std::runtime_error(error_message);
+    }
+    
+    fs::create_directory(OUTPUT_DIR, ec);
+    if (ec) {
+        const std::string error_message =
+            std::format("Failed to create output directory {}: {}", OUTPUT_DIR, ec.message());
+        throw std::runtime_error(error_message);
+    }
+    
+    const std::string config_name = CONFIG_DIR + "/" + CONFIG_NAME;
 
     std::ofstream fout(config_name);
+    if (!fout) {
+        const std::string error_message =
+            std::format("Failed to create config file: {}", config_name);
+        throw std::runtime_error(error_message);
+    }
 
     json j = json::object();
     j["path"] = OUTPUT_DIR;
-    j["name"] = name;
+    j["name"] = "checklist.json"s;
 
     fout << j.dump(4);
     fout.close();
+    
+    // Проверяем, что файл был успешно записан
+    if (fout.fail()) {
+        const std::string error_message =
+            std::format("Failed to write data to config file: {}", config_name);
+        throw std::runtime_error(error_message);
+    }
 }
 
 }  // namespace task
