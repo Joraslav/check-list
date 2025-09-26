@@ -3,3 +3,6 @@ build
 
 # vs code folder
 .vscode
+
+# config file
+config_todo.json
