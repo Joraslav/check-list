@@ -12,10 +12,10 @@ namespace fs = std::filesystem;
 
 using std::string_literals::operator""s;
 
-const std::string CONFIG_DIR = "../config"s;
-const std::string CONFIG_NAME = "config_todo.json"s;
+const std::string DEFAULT_CONFIG_DIR = "../config"s;
+const std::string DEFAULT_CONFIG_NAME = "config_todo.json"s;
 
-const std::string OUTPUT_DIR = "../notepad"s;
+const std::string DEFAULT_OUTPUT_DIR = "../notepad"s;
 const std::string DEFAULT_LIST = "checklist.json"s;
 
 struct Task {
@@ -30,7 +30,7 @@ class TaskManager {
  public:
     using json = nlohmann::json;
 
-    TaskManager();
+    TaskManager(const std::string& config_path = DEFAULT_CONFIG_DIR + "/" + DEFAULT_CONFIG_NAME);
 
     void LoadTasksFromFile(const std::string& filename);
     void AddTask(const std::string& text);
@@ -45,11 +45,12 @@ class TaskManager {
     void PrintTasks() const;
     void PrintTasks(bool only_completed) const;
 
-    static void SetPath(const std::string& path);
-    static void SetName(const std::string& name);
+    static void SetPath(const std::string& path, const std::string& config_path = DEFAULT_CONFIG_DIR + "/" + DEFAULT_CONFIG_NAME);
+    static void SetName(const std::string& name, const std::string& config_path = DEFAULT_CONFIG_DIR + "/" + DEFAULT_CONFIG_NAME);
 
  private:
     std::vector<Task> tasks_;
+    std::string config_path_;
     std::string path_;
     std::string filename_;
     std::string full_name_;

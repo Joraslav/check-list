@@ -26,11 +26,11 @@ void PrintHelp() {
 
 int main(int argc, char** argv) {
     try {
-        if (!fs::exists(CONFIG_DIR) || !fs::exists(OUTPUT_DIR)) {
+        if (!fs::exists(DEFAULT_CONFIG_DIR) || !fs::exists(DEFAULT_OUTPUT_DIR)) {
             MakeDefaultConfig();
         }
 
-        TaskManager manager;
+        TaskManager manager(DEFAULT_CONFIG_DIR + "/" + DEFAULT_CONFIG_NAME);
 
         // Если нет аргументов, показать список задач
         if (argc < 2) {
@@ -158,10 +158,10 @@ int main(int argc, char** argv) {
             std::string value = argv[3];
 
             if (config_command == "path") {
-                TaskManager::SetPath(value);
+                TaskManager::SetPath(value, DEFAULT_CONFIG_DIR + "/" + DEFAULT_CONFIG_NAME);
                 std::cout << "Path configured successfully.\n";
             } else if (config_command == "name") {
-                TaskManager::SetName(value);
+                TaskManager::SetName(value, DEFAULT_CONFIG_DIR + "/" + DEFAULT_CONFIG_NAME);
                 std::cout << "Filename configured successfully.\n";
             } else {
                 std::cerr << "Error: Unknown config command '" << config_command

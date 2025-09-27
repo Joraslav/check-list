@@ -20,3 +20,8 @@ if(NOT GTest_FOUND)
 else()
     message(STATUS "GTest found ^_^. Version: ${GTest_VERSION}")
 endif()
+
+add_executable(TaskTest task_test.cpp)
+target_include_directories(TaskTest PRIVATE ${TASK_INCLUDE_DIR} ${nlohmann_json_INCLUDE_DIRS})
+target_link_libraries(TaskTest PRIVATE task GTest::GTest GTest::Main)
+add_test(NAME Task COMMAND TaskTest)
