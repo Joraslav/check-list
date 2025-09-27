@@ -53,6 +53,19 @@ add_executable(${CONSOLE_NAME} src/main.cpp)
 target_include_directories(${CONSOLE_NAME} PRIVATE ${TASK_INCLUDE_DIR})
 target_link_libraries(${CONSOLE_NAME} PRIVATE task)
 
+# Установка целей
+install(TARGETS ${CONSOLE_NAME} task
+    RUNTIME DESTINATION bin
+    LIBRARY DESTINATION lib
+    ARCHIVE DESTINATION lib
+)
+
+# Установка заголовочных файлов
+install(DIRECTORY ${INCLUDE_DIR}/
+    DESTINATION include
+    FILES_MATCHING PATTERN "*.hpp"
+)
+
 if(BUILD_TEST)
     message(STATUS "Builded tests")
     include(CTest)
@@ -60,9 +73,41 @@ if(BUILD_TEST)
     add_subdirectory(tests)
 endif()
 
-
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
+
+# CPack settings
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Check-list application for task management")
+set(CPACK_PACKAGE_VENDOR "Dol")
+set(CPACK_PACKAGE_CONTACT "yar.mozg2002@gmail.com")
+set(CPACK_PACKAGE_VERSION_MAJOR ${PROJECT_VERSION_MAJOR})
+set(CPACK_PACKAGE_VERSION_MINOR ${PROJECT_VERSION_MINOR})
+set(CPACK_PACKAGE_VERSION_PATCH ${PROJECT_VERSION_PATCH})
+set(CPACK_PACKAGE_INSTALL_DIRECTORY "${CPACK_PACKAGE_NAME}")
+set(CPACK_PACKAGE_EXECUTABLES "${CONSOLE_NAME}" "Check List Application")
+
+# Component settings
+set(CPACK_COMPONENTS_ALL applications)
+set(CPACK_COMPONENT_APPLICATIONS_DISPLAY_NAME "Check List Application")
+set(CPACK_COMPONENT_APPLICATIONS_DESCRIPTION "The main check list application")
+
+# Debian package settings
+set(CPACK_DEBIAN_PACKAGE_MAINTAINER "Your Name <your.email@example.com>")
+set(CPACK_DEBIAN_PACKAGE_SECTION "devel")
+set(CPACK_DEBIAN_PACKAGE_PRIORITY "optional")
+set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS OFF)
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "libc6 (>= 2.2.1)")
+
+# Windows package settings
+set(CPACK_NSIS_DISPLAY_NAME "Check List Application")
+set(CPACK_NSIS_PACKAGE_NAME "Check List Application")
+set(CPACK_NSIS_CONTACT "info@example.com")
+set(CPACK_NSIS_ENABLE_UNINSTALL_BEFORE_INSTALL ON)
+set(CPACK_NSIS_MODIFY_PATH ON)
+
+# Generators
+set(CPACK_GENERATOR "TGZ;DEB;NSIS")
+
 include(CPack)
 
 message(STATUS "Version: ${PROJECT_VERSION}")
