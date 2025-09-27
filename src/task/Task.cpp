@@ -30,9 +30,7 @@ TaskManager::TaskManager() {
 }
 
 void TaskManager::LoadTasksFromFile(const std::string& filename) {
-    // Проверяем существование файла
     if (!fs::exists(filename)) {
-        // Если файл не существует, создаем пустой вектор задач
         tasks_.clear();
         return;
     }
@@ -125,7 +123,7 @@ void TaskManager::PrintTasks() const {
         return;
     }
     
-    for (size_t i = 0; i < tasks_.size(); ++i) {
+    for (size_t i = 0; i != tasks_.size(); ++i) {
         std::cout << i << ". ";
         if (tasks_[i].done) {
             std::cout << "[x] ";

@@ -41,7 +41,6 @@ class TaskManager {
     bool TaskExists(size_t index) const;
     void Save() const;
     
-    // Методы для получения информации
     const std::vector<Task>& GetTasks() const;
     void PrintTasks() const;
     void PrintTasks(bool only_completed) const;
