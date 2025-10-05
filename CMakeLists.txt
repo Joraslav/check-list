@@ -30,17 +30,18 @@ if(NOT nlohmann_json_FOUND)
     message(STATUS "nlohmann_json not found. Trying to download...")
     include(FetchContent)
     FetchContent_Declare(
-        nlohmann_json
-        GIT_REPOSITORY https://github.com/nlohmann/json.git
-        GIT_TAG v3.12.0
+        json
+        # GIT_REPOSITORY https://github.com/nlohmann/json.git
+        URL https://github.com/nlohmann/json/releases/download/v3.12.0/json.tar.xz
+        # GIT_TAG v3.11.3
     )
-    FetchContent_MakeAvailable(nlohmann_json)
+    FetchContent_MakeAvailable(json)
     # find_package(nlohmann_json REQUIRED)
-    if(nlohmann_json_FOUND)
-        message(STATUS "nlohmann_json downloaded and found ^_^. Version: ${nlohmann_json_VERSION}")
-    else()
-        message(FATAL_ERROR "nlohmann_json not found after download")
-    endif()
+    # if(nlohmann_json_FOUND)
+    #     message(STATUS "nlohmann_json downloaded and found ^_^. Version: ${nlohmann_json_VERSION}")
+    # else()
+    #     message(FATAL_ERROR "nlohmann_json not found after download")
+    # endif()
 else()
     message(STATUS "nlohmann_json found ^_^. Version: ${nlohmann_json_VERSION}")
 endif()
