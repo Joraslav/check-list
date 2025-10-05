@@ -12,7 +12,7 @@ add_compile_options(
 )
 
 # Настройка опций сборки
-option(BUILD_TEST "Build tests" ON)
+option(BUILD_TEST "Build tests" OFF)
 
 # Консольное имя
 set(CONSOLE_NAME todo)
