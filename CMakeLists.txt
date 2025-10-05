@@ -35,7 +35,7 @@ if(NOT nlohmann_json_FOUND)
         GIT_TAG v3.12.0
     )
     FetchContent_MakeAvailable(nlohmann_json)
-    find_package(nlohmann_json REQUIRED)
+    # find_package(nlohmann_json REQUIRED)
     if(nlohmann_json_FOUND)
         message(STATUS "nlohmann_json downloaded and found ^_^. Version: ${nlohmann_json_VERSION}")
     else()
