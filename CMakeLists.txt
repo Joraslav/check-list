@@ -43,7 +43,7 @@ else()
 endif()
 
 add_library(task STATIC ${TASK_INCLUDE_DIR}/Task.hpp ${TASK_SOURCE_DIR}/Task.cpp)
-target_include_directories(task PRIVATE ${TASK_INCLUDE_DIR} ${nlohmann_json_INCLUDE_DIRS})
+target_include_directories(task PUBLIC ${TASK_INCLUDE_DIR} ${nlohmann_json_INCLUDE_DIRS})
 target_link_libraries(task PRIVATE nlohmann_json::nlohmann_json)
 
 add_executable(${CONSOLE_NAME} src/main.cpp)
