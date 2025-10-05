@@ -11,6 +11,7 @@ if(NOT GTest_FOUND)
         GIT_TAG v1.17.0
     )
     FetchContent_MakeAvailable(googletest)
+    list(APPEND CMAKE_MODULE_PATH "${CMAKE_BINARY_DIR}/_deps")
     find_package(GTest REQUIRED)
     if(GTest_FOUND)
         message(STATUS "GTest downloaded and found ^_^. Version: ${GTest_VERSION}")
