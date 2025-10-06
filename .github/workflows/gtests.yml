@@ -28,9 +28,3 @@ jobs:
 
       - name: Test
         run: ctest -C ${{env.BUILD_TYPE}}
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Package
-        run: cpack -C ${{env.BUILD_TYPE}}
