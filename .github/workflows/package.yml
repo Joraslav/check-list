@@ -24,5 +24,10 @@ jobs:
       - name: Build project
         run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
 
+      - name: Check build directory
+        run: ls -la ${{github.workspace}}/build
+
       - name: Create package
-        run: cpack ${{github.workspace}}/build -C ${{env.BUILD_TYPE}}
+        run: |
+          cd ${{github.workspace}}/build
+          cpack -C ${{env.BUILD_TYPE}}
