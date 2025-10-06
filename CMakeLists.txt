@@ -22,6 +22,7 @@ add_compile_options(
 
 # Build options
 option(BUILD_TEST "Build tests" OFF)
+option(DEV_MODE "Using develope mode" ON)
 
 # Project directories
 set(PROJECT_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")
@@ -142,13 +143,18 @@ set(CPACK_NSIS_ENABLE_UNINSTALL_BEFORE_INSTALL ON)
 set(CPACK_NSIS_MODIFY_PATH ON)
 
 # Package generators
-if(WIN32)
-    set(CPACK_GENERATOR "NSIS")
-elseif(UNIX AND NOT APPLE)
-    set(CPACK_GENERATOR "TGZ;DEB")
-elseif(APPLE)
-    set(CPACK_GENERATOR "TGZ")
+if(DEV_MODE)
+    set(CPACK_GENERATOR "TGZ;DEB;NSIS")
+else()
+    if(WIN32)
+        set(CPACK_GENERATOR "NSIS")
+    elseif(UNIX AND NOT APPLE)
+        set(CPACK_GENERATOR "TGZ;DEB")
+    elseif(APPLE)
+        set(CPACK_GENERATOR "TGZ")
+    endif()
 endif()
+
 
 include(CPack)
 
