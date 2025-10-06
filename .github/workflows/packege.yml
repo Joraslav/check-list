@@ -1,6 +1,4 @@
-# This starter workflow is for a CMake project running on a single platform. There is a different starter workflow if you need cross-platform coverage.
-# See: https://github.com/actions/starter-workflows/blob/main/ci/cmake-multi-platform.yml
-name: GTest tests
+name: Package test
 
 on:
   push:
@@ -9,14 +7,13 @@ on:
     branches: ["main"]
 
 env:
-  # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
   BUILD_TYPE: Release
-  BUILD_TEST: ON
+  BUILD_TEST: OFF
 
 jobs:
-  GTest:
+  Package:
     runs-on: ubuntu-latest
-
+		
     steps:
       - uses: actions/checkout@v4
 
@@ -25,12 +22,6 @@ jobs:
 
       - name: Build
         run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
-
-      - name: Test
-        run: ctest -C ${{env.BUILD_TYPE}}
-
-    steps:
-      - uses: actions/checkout@v4
 
       - name: Package
         run: cpack -C ${{env.BUILD_TYPE}}

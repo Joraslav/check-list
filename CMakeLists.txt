@@ -1,9 +1,18 @@
 cmake_minimum_required(VERSION 3.31.0)
-project(check-list VERSION 0.1.0 LANGUAGES C CXX)
 
+# Project information
+project(check-list
+    VERSION 0.1.0
+    LANGUAGES C CXX
+    DESCRIPTION "Check-list application for task management"
+)
+
+# C++ standard requirements
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
+# Compiler options
 add_compile_options(
     -Wall
     -Wextra
@@ -11,29 +20,25 @@ add_compile_options(
     -Wno-unused-parameter
 )
 
-# Настройка опций сборки
+# Build options
 option(BUILD_TEST "Build tests" OFF)
 
-# Консольное имя
-set(CONSOLE_NAME todo)
+# Project directories
+set(PROJECT_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")
+set(PROJECT_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
 
-# Устновка переменных путей
-set(INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
-set(SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
+# Task module directories
+set(TASK_INCLUDE_DIR "${PROJECT_INCLUDE_DIR}/task")
+set(TASK_SOURCE_DIR "${PROJECT_SOURCE_DIR}/task")
 
-set(TASK_INCLUDE_DIR ${INCLUDE_DIR}/task)
-set(TASK_SOURCE_DIR ${SOURCE_DIR}/task)
-
-# Поиск nlohmann_json
+# Find or fetch nlohmann_json
 find_package(nlohmann_json QUIET)
 if(NOT nlohmann_json_FOUND)
     message(STATUS "nlohmann_json not found. Trying to download...")
     include(FetchContent)
     FetchContent_Declare(
-        # json
         nlohmann_json
         GIT_REPOSITORY https://github.com/nlohmann/json.git
-        # URL https://github.com/nlohmann/json/releases/download/v3.12.0/json.tar.xz
         GIT_TAG v3.11.3
     )
     FetchContent_MakeAvailable(nlohmann_json)
@@ -42,46 +47,78 @@ else()
     message(STATUS "nlohmann_json found ^_^. Version: ${nlohmann_json_VERSION}")
 endif()
 
-add_library(task STATIC ${TASK_INCLUDE_DIR}/Task.hpp ${TASK_SOURCE_DIR}/Task.cpp)
-target_include_directories(task PUBLIC ${TASK_INCLUDE_DIR} ${nlohmann_json_INCLUDE_DIRS})
-target_link_libraries(task PRIVATE nlohmann_json::nlohmann_json)
-
-add_executable(${CONSOLE_NAME} src/main.cpp)
-target_include_directories(${CONSOLE_NAME} PRIVATE ${TASK_INCLUDE_DIR})
-target_link_libraries(${CONSOLE_NAME} PRIVATE task)
-
-# Установка целей
-install(TARGETS ${CONSOLE_NAME} task
-    RUNTIME DESTINATION bin
-    LIBRARY DESTINATION lib
-    ARCHIVE DESTINATION lib
+# Create task library
+add_library(task STATIC
+    "${TASK_INCLUDE_DIR}/Task.hpp"
+    "${TASK_SOURCE_DIR}/Task.cpp"
 )
 
-# Установка заголовочных файлов
-install(DIRECTORY ${INCLUDE_DIR}/
-    DESTINATION include
+target_include_directories(task
+    PUBLIC
+    "$<BUILD_INTERFACE:${TASK_INCLUDE_DIR}>"
+    "$<INSTALL_INTERFACE:include>"
+    PRIVATE
+    ${nlohmann_json_INCLUDE_DIRS}
+)
+
+target_link_libraries(task
+    PRIVATE
+    nlohmann_json::nlohmann_json
+)
+
+# Create main executable
+set(CONSOLE_NAME todo)
+add_executable(${CONSOLE_NAME}
+    src/main.cpp
+)
+
+target_include_directories(${CONSOLE_NAME}
+    PRIVATE
+    ${TASK_INCLUDE_DIR}
+)
+
+target_link_libraries(${CONSOLE_NAME}
+    PRIVATE
+    task
+)
+
+# Installation rules
+include(GNUInstallDirs)
+install(TARGETS ${CONSOLE_NAME} task
+    EXPORT ${PROJECT_NAME}-targets
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)
+
+install(DIRECTORY ${PROJECT_INCLUDE_DIR}/
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
     FILES_MATCHING PATTERN "*.hpp"
 )
 
+install(EXPORT ${PROJECT_NAME}-targets
+    FILE ${PROJECT_NAME}-targets.cmake
+    NAMESPACE ${PROJECT_NAME}::
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
+)
+
+# Enable testing if requested
 if(BUILD_TEST)
-    message(STATUS "Builded tests")
+    message(STATUS "Building tests")
     include(CTest)
     enable_testing()
     add_subdirectory(tests)
 endif()
 
+# CPack configuration
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
 
-# CPack settings
+# General CPack settings
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Check-list application for task management")
 set(CPACK_PACKAGE_VENDOR "Dol")
 set(CPACK_PACKAGE_CONTACT "yar.mozg2002@gmail.com")
-set(CPACK_PACKAGE_VERSION_MAJOR ${PROJECT_VERSION_MAJOR})
-set(CPACK_PACKAGE_VERSION_MINOR ${PROJECT_VERSION_MINOR})
-set(CPACK_PACKAGE_VERSION_PATCH ${PROJECT_VERSION_PATCH})
 set(CPACK_PACKAGE_INSTALL_DIRECTORY "${CPACK_PACKAGE_NAME}")
-set(CPACK_PACKAGE_EXECUTABLES "${CONSOLE_NAME}" "Check List Application")
 
 # Component settings
 set(CPACK_COMPONENTS_ALL applications)
@@ -102,9 +139,12 @@ set(CPACK_NSIS_CONTACT "info@example.com")
 set(CPACK_NSIS_ENABLE_UNINSTALL_BEFORE_INSTALL ON)
 set(CPACK_NSIS_MODIFY_PATH ON)
 
-# Generators
+# Package generators
 set(CPACK_GENERATOR "TGZ;DEB;NSIS")
 
 include(CPack)
 
+# Display project information
+message(STATUS "Project: ${PROJECT_NAME}")
 message(STATUS "Version: ${PROJECT_VERSION}")
+message(STATUS "C++ Standard: ${CMAKE_CXX_STANDARD}")
