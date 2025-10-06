@@ -57,12 +57,10 @@ target_include_directories(task
     PUBLIC
     "$<BUILD_INTERFACE:${TASK_INCLUDE_DIR}>"
     "$<INSTALL_INTERFACE:include>"
-    PRIVATE
-    ${nlohmann_json_INCLUDE_DIRS}
 )
 
 target_link_libraries(task
-    PRIVATE
+    PUBLIC
     nlohmann_json::nlohmann_json
 )
 
@@ -84,12 +82,16 @@ target_link_libraries(${CONSOLE_NAME}
 
 # Installation rules
 include(GNUInstallDirs)
-install(TARGETS ${CONSOLE_NAME} task
+install(TARGETS ${CONSOLE_NAME}
     EXPORT ${PROJECT_NAME}-targets
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
+
+# Note: task library is not exported because it depends on nlohmann_json which is fetched externally
+# Users of the installed package should fetch nlohmann_json separately if they want to use the task library
+# For most users, the todo executable is sufficient
 
 install(DIRECTORY ${PROJECT_INCLUDE_DIR}/
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
@@ -126,7 +128,7 @@ set(CPACK_COMPONENT_APPLICATIONS_DISPLAY_NAME "Check List Application")
 set(CPACK_COMPONENT_APPLICATIONS_DESCRIPTION "The main check list application")
 
 # Debian package settings
-set(CPACK_DEBIAN_PACKAGE_MAINTAINER "Your Name <your.email@example.com>")
+set(CPACK_DEBIAN_PACKAGE_MAINTAINER "Yaroslav Moskalev yar.mozg2002@gmail.com")
 set(CPACK_DEBIAN_PACKAGE_SECTION "devel")
 set(CPACK_DEBIAN_PACKAGE_PRIORITY "optional")
 set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS OFF)
@@ -135,7 +137,7 @@ set(CPACK_DEBIAN_PACKAGE_DEPENDS "libc6 (>= 2.2.1)")
 # Windows package settings
 set(CPACK_NSIS_DISPLAY_NAME "Check List Application")
 set(CPACK_NSIS_PACKAGE_NAME "Check List Application")
-set(CPACK_NSIS_CONTACT "info@example.com")
+set(CPACK_NSIS_CONTACT "yar.mozg2002@gmail.com")
 set(CPACK_NSIS_ENABLE_UNINSTALL_BEFORE_INSTALL ON)
 set(CPACK_NSIS_MODIFY_PATH ON)
 

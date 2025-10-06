@@ -28,7 +28,6 @@ add_executable(TaskTest
 target_include_directories(TaskTest
     PRIVATE
     ${TASK_INCLUDE_DIR}
-    ${nlohmann_json_INCLUDE_DIRS}
 )
 
 # Link libraries to the test target
@@ -38,6 +37,7 @@ if(GTest_FOUND)
         task
         GTest::GTest
         GTest::Main
+        nlohmann_json::nlohmann_json
     )
 else()
     target_link_libraries(TaskTest
@@ -45,6 +45,7 @@ else()
         task
         gtest
         gtest_main
+        nlohmann_json::nlohmann_json
     )
 endif()
 
