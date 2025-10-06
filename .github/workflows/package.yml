@@ -1,4 +1,4 @@
-name: Package Test
+name: Package
 
 # This workflow builds and packages the project
 on:

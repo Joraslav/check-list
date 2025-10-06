@@ -1,5 +1,5 @@
 # This workflow builds and runs GTest unit tests
-name: GTest Tests
+name: GTest
 
 on:
   push:
