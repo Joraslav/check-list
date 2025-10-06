@@ -2,6 +2,9 @@
 
 Check List - это консольное приложение для управления списком задач (Todo List), написанное на C++. Приложение позволяет создавать, просматривать, редактировать и отслеживать выполнение задач через удобный командный интерфейс.
 
+[![GTest](https://github.com/Joraslav/check-list/actions/workflows/gtests.yml/badge.svg)](https://github.com/Joraslav/check-list/actions/workflows/gtests.yml)
+[![Package](https://github.com/Joraslav/check-list/actions/workflows/package.yml/badge.svg)](https://github.com/Joraslav/check-list/actions/workflows/package.yml)
+
 ## Основные возможности
 
 - Добавление новых задач с произвольным текстом
