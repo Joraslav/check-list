@@ -16,6 +16,7 @@ void PrintHelp() {
     std::cout << "  list                Show all tasks\n";
     std::cout << "  list pending        Show pending tasks\n";
     std::cout << "  list completed      Show completed tasks\n";
+    std::cout << "  clear               Clear all tasks\n";
     std::cout << "  done <index>        Toggle task completion status\n";
     std::cout << "  remove <index>      Remove a task\n";
     std::cout << "  edit <index> <text> Edit a task\n";
@@ -72,6 +73,10 @@ int main(int argc, char** argv) {
             } else {
                 manager.PrintTasks();
             }
+        } else if (command == "clear") {
+            manager.ClearTasks();
+            manager.Save();
+            std::cout << "All tasks in " << manager.GetFullName() << " cleared successfully\n";
         } else if (command == "done") {
             if (argc < 3) {
                 std::cerr << "Error: 'done' command requires a task index\n";

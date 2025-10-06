@@ -2,8 +2,8 @@
 
 #include <format>
 #include <fstream>
-#include <stdexcept>
 #include <iostream>
+#include <stdexcept>
 
 namespace task {
 
@@ -33,7 +33,7 @@ void TaskManager::LoadTasksFromFile(const std::string& filename) {
         tasks_.clear();
         return;
     }
-    
+
     std::ifstream fin(filename);
     if (!fin) {
         const std::string error_message = std::format(
@@ -45,7 +45,7 @@ void TaskManager::LoadTasksFromFile(const std::string& filename) {
     fin.seekg(0, std::ios::end);
     size_t file_size = fin.tellg();
     fin.seekg(0, std::ios::beg);
-    
+
     if (file_size == 0) {
         // Если файл пустой, очищаем список задач и возвращаемся
         tasks_.clear();
@@ -54,12 +54,12 @@ void TaskManager::LoadTasksFromFile(const std::string& filename) {
     }
 
     json j = json::parse(fin);
-    
+
     // Проверяем, что JSON является массивом
     if (!j.is_array()) {
         fin.close();
-        const std::string error_message = std::format(
-            "Invalid file format in {}: expected an array of tasks", filename);
+        const std::string error_message =
+            std::format("Invalid file format in {}: expected an array of tasks", filename);
         throw std::runtime_error(error_message);
     }
 
@@ -68,34 +68,34 @@ void TaskManager::LoadTasksFromFile(const std::string& filename) {
         // Проверяем, что каждый элемент является объектом
         if (!task.is_object()) {
             fin.close();
-            const std::string error_message = std::format(
-                "Invalid task format in {}: task must be a JSON object", filename);
+            const std::string error_message =
+                std::format("Invalid task format in {}: task must be a JSON object", filename);
             throw std::runtime_error(error_message);
         }
-        
+
         // Проверяем, что каждый элемент имеет необходимые поля
         if (!task.contains("text") || !task.contains("done")) {
             fin.close();
-            const std::string error_message = std::format(
-                "Invalid task format in {}: missing 'text' or 'done' field", filename);
+            const std::string error_message =
+                std::format("Invalid task format in {}: missing 'text' or 'done' field", filename);
             throw std::runtime_error(error_message);
         }
-        
+
         // Проверяем типы полей
         if (!task["text"].is_string()) {
             fin.close();
-            const std::string error_message = std::format(
-                "Invalid task format in {}: 'text' field must be a string", filename);
+            const std::string error_message =
+                std::format("Invalid task format in {}: 'text' field must be a string", filename);
             throw std::runtime_error(error_message);
         }
-        
+
         if (!task["done"].is_boolean()) {
             fin.close();
-            const std::string error_message = std::format(
-                "Invalid task format in {}: 'done' field must be a boolean", filename);
+            const std::string error_message =
+                std::format("Invalid task format in {}: 'done' field must be a boolean", filename);
             throw std::runtime_error(error_message);
         }
-        
+
         tasks_.push_back(Task(task["text"], task["done"]));
     }
 
@@ -116,9 +116,7 @@ void TaskManager::ToggleTask(size_t index) {
     tasks_[index].done = !tasks_[index].done;
 }
 
-bool TaskManager::TaskExists(size_t index) const {
-    return index < tasks_.size();
-}
+bool TaskManager::TaskExists(size_t index) const { return index < tasks_.size(); }
 
 void TaskManager::RemoveTask(size_t index) {
     if (index >= tasks_.size()) {
@@ -130,6 +128,8 @@ void TaskManager::RemoveTask(size_t index) {
     tasks_.erase(tasks_.begin() + index);
 }
 
+void TaskManager::ClearTasks() { tasks_.clear(); }
+
 void TaskManager::EditTask(size_t index, const std::string& new_text) {
     if (index >= tasks_.size()) {
         const std::string error_message = std::format(
@@ -140,16 +140,14 @@ void TaskManager::EditTask(size_t index, const std::string& new_text) {
     tasks_[index].text = new_text;
 }
 
-const std::vector<Task>& TaskManager::GetTasks() const {
-    return tasks_;
-}
+const std::vector<Task>& TaskManager::GetTasks() const { return tasks_; }
 
 void TaskManager::PrintTasks() const {
     if (tasks_.empty()) {
         std::cout << "No tasks found.\n";
         return;
     }
-    
+
     for (size_t i = 0; i != tasks_.size(); ++i) {
         std::cout << i << ". ";
         if (tasks_[i].done) {
@@ -166,7 +164,7 @@ void TaskManager::PrintTasks(bool only_completed) const {
         std::cout << "No tasks found.\n";
         return;
     }
-    
+
     bool found = false;
     for (size_t i = 0; i < tasks_.size(); ++i) {
         if (only_completed == tasks_[i].done) {
@@ -180,7 +178,7 @@ void TaskManager::PrintTasks(bool only_completed) const {
             found = true;
         }
     }
-    
+
     if (!found) {
         if (only_completed) {
             std::cout << "No completed tasks found.\n";
@@ -216,7 +214,7 @@ void TaskManager::Save() const {
     }
     fout << j.dump(4);
     fout.close();
-    
+
     // Проверяем, что файл был успешно записан
     if (fout.fail()) {
         const std::string error_message =
@@ -237,7 +235,7 @@ void TaskManager::SetPath(const std::string& path, const std::string& config_pat
             throw std::runtime_error(error_message);
         }
     }
-    
+
     std::ifstream fin(config_path);
     json j;
 
@@ -257,17 +255,16 @@ void TaskManager::SetPath(const std::string& path, const std::string& config_pat
     std::ofstream fout(config_path);
     if (!fout) {
         const fs::path dir_path = fs::path(config_path);
-        const std::string error_message = "Failed to open config file for writing: " +
-                                          fs::absolute(dir_path).string();
+        const std::string error_message =
+            "Failed to open config file for writing: " + fs::absolute(dir_path).string();
         throw std::runtime_error(error_message);
     }
     fout << j.dump(4);
     fout.close();
-    
+
     // Проверяем, что файл был успешно записан
     if (fout.fail()) {
-        const std::string error_message =
-            "Failed to write data to config file: " + config_path;
+        const std::string error_message = "Failed to write data to config file: " + config_path;
         throw std::runtime_error(error_message);
     }
 }
@@ -284,7 +281,7 @@ void TaskManager::SetName(const std::string& name, const std::string& config_pat
             throw std::runtime_error(error_message);
         }
     }
-    
+
     std::ifstream fin(config_path);
     json j;
 
@@ -304,20 +301,21 @@ void TaskManager::SetName(const std::string& name, const std::string& config_pat
     std::ofstream fout(config_path);
     if (!fout) {
         const fs::path dir_path = fs::path(config_path);
-        const std::string error_message = "Failed to open config file for writing: " +
-                                          fs::absolute(dir_path).string();
+        const std::string error_message =
+            "Failed to open config file for writing: " + fs::absolute(dir_path).string();
         throw std::runtime_error(error_message);
     }
     fout << j.dump(4);
     fout.close();
-    
+
     // Проверяем, что файл был успешно записан
     if (fout.fail()) {
-        const std::string error_message =
-            "Failed to write data to config file: " + config_path;
+        const std::string error_message = "Failed to write data to config file: " + config_path;
         throw std::runtime_error(error_message);
     }
 }
+
+const std::string& TaskManager::GetFullName() const { return full_name_; }
 
 // ------- Функции -------
 
@@ -332,20 +330,19 @@ void MakeDefaultConfig() {
             "Failed to create config directory " + DEFAULT_CONFIG_DIR + ": " + ec.message();
         throw std::runtime_error(error_message);
     }
-    
+
     fs::create_directory(DEFAULT_OUTPUT_DIR, ec);
     if (ec) {
         const std::string error_message =
             "Failed to create output directory " + DEFAULT_OUTPUT_DIR + ": " + ec.message();
         throw std::runtime_error(error_message);
     }
-    
+
     const std::string config_name = DEFAULT_CONFIG_DIR + "/" + DEFAULT_CONFIG_NAME;
 
     std::ofstream fout(config_name);
     if (!fout) {
-        const std::string error_message =
-            "Failed to create config file: " + config_name;
+        const std::string error_message = "Failed to create config file: " + config_name;
         throw std::runtime_error(error_message);
     }
 
@@ -355,11 +352,10 @@ void MakeDefaultConfig() {
 
     fout << j.dump(4);
     fout.close();
-    
+
     // Проверяем, что файл был успешно записан
     if (fout.fail()) {
-        const std::string error_message =
-            "Failed to write data to config file: " + config_name;
+        const std::string error_message = "Failed to write data to config file: " + config_name;
         throw std::runtime_error(error_message);
     }
 }

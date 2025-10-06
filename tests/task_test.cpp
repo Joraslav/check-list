@@ -538,6 +538,48 @@ TEST_F(TaskManagerTest, SaveAndLoad_ManyTasks) {
     }
 }
 
+// Тесты для метода ClearTasks
+TEST_F(TaskManagerTest, ClearTasks_NonEmptyList_Success) {
+    CreateConfigFile(output_dir_.string(), "test_list.json");
+    
+    TaskManager manager(config_file_.string());
+    manager.AddTask("Task 1");
+    manager.AddTask("Task 2");
+    manager.AddTask("Task 3");
+    
+    // Проверяем, что список задач не пуст
+    EXPECT_FALSE(manager.GetTasks().empty());
+    EXPECT_EQ(manager.GetTasks().size(), 3);
+    
+    // Очищаем список задач
+    EXPECT_NO_THROW({
+        manager.ClearTasks();
+    });
+    
+    // Проверяем, что список задач пуст
+    EXPECT_TRUE(manager.GetTasks().empty());
+    EXPECT_EQ(manager.GetTasks().size(), 0);
+}
+
+TEST_F(TaskManagerTest, ClearTasks_EmptyList_Success) {
+    CreateConfigFile(output_dir_.string(), "test_list.json");
+    
+    TaskManager manager(config_file_.string());
+    
+    // Проверяем, что список задач изначально пуст
+    EXPECT_TRUE(manager.GetTasks().empty());
+    EXPECT_EQ(manager.GetTasks().size(), 0);
+    
+    // Очищаем пустой список задач
+    EXPECT_NO_THROW({
+        manager.ClearTasks();
+    });
+    
+    // Проверяем, что список задач все еще пуст
+    EXPECT_TRUE(manager.GetTasks().empty());
+    EXPECT_EQ(manager.GetTasks().size(), 0);
+}
+
 } // namespace task
 
 int main(int argc, char **argv) {

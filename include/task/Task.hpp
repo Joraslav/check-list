@@ -37,6 +37,7 @@ class TaskManager {
     void AddTask(const Task& task);
     void ToggleTask(size_t index);
     void RemoveTask(size_t index);
+    void ClearTasks();
     void EditTask(size_t index, const std::string& new_text);
     bool TaskExists(size_t index) const;
     void Save() const;
@@ -47,6 +48,8 @@ class TaskManager {
 
     static void SetPath(const std::string& path, const std::string& config_path = DEFAULT_CONFIG_DIR + "/" + DEFAULT_CONFIG_NAME);
     static void SetName(const std::string& name, const std::string& config_path = DEFAULT_CONFIG_DIR + "/" + DEFAULT_CONFIG_NAME);
+
+    const std::string& GetFullName() const;
 
  private:
     std::vector<Task> tasks_;

@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.31.0)
 
 # Project information
 project(check-list
-    VERSION 0.1.0
+    VERSION 0.2.0
     LANGUAGES C CXX
     DESCRIPTION "Check-list application for task management"
 )
@@ -124,8 +124,8 @@ set(CPACK_PACKAGE_INSTALL_DIRECTORY "${CPACK_PACKAGE_NAME}")
 
 # Component settings
 set(CPACK_COMPONENTS_ALL applications)
-set(CPACK_COMPONENT_APPLICATIONS_DISPLAY_NAME "Check List Application")
-set(CPACK_COMPONENT_APPLICATIONS_DESCRIPTION "The main check list application")
+set(CPACK_COMPONENT_APPLICATIONS_DISPLAY_NAME "Check List")
+set(CPACK_COMPONENT_APPLICATIONS_DESCRIPTION "The main check list")
 
 # Debian package settings
 set(CPACK_DEBIAN_PACKAGE_MAINTAINER "Yaroslav Moskalev yar.mozg2002@gmail.com")
@@ -135,8 +135,8 @@ set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS OFF)
 set(CPACK_DEBIAN_PACKAGE_DEPENDS "libc6 (>= 2.2.1)")
 
 # Windows package settings
-set(CPACK_NSIS_DISPLAY_NAME "Check List Application")
-set(CPACK_NSIS_PACKAGE_NAME "Check List Application")
+set(CPACK_NSIS_DISPLAY_NAME "Check List")
+set(CPACK_NSIS_PACKAGE_NAME "Check List")
 set(CPACK_NSIS_CONTACT "yar.mozg2002@gmail.com")
 set(CPACK_NSIS_ENABLE_UNINSTALL_BEFORE_INSTALL ON)
 set(CPACK_NSIS_MODIFY_PATH ON)
