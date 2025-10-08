@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.31.0)
 
 # Project information
 project(check-list
-    VERSION 0.2.0
+    VERSION 0.3.0
     LANGUAGES C CXX
     DESCRIPTION "Check-list application for task management"
 )
@@ -22,7 +22,7 @@ add_compile_options(
 
 # Build options
 option(BUILD_TEST "Build tests" OFF)
-option(DEV_MODE "Using develope mode" ON)
+option(DEV_MODE "Using develop mode" ON)
 
 # Project directories
 set(PROJECT_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")
@@ -45,7 +45,35 @@ if(NOT nlohmann_json_FOUND)
     FetchContent_MakeAvailable(nlohmann_json)
     message(STATUS "nlohmann_json downloaded and ready to use.")
 else()
-    message(STATUS "nlohmann_json found ^_^. Version: ${nlohmann_json_VERSION}")
+    message(STATUS "nlohmann_json found ;-). Version: ${nlohmann_json_VERSION}")
+endif()
+
+# Find Boost
+find_package(Boost QUIET COMPONENTS system)
+if(NOT Boost_FOUND)
+    message(STATUS "Boost not found. Trying to use Conan...")
+    find_program(CONAN_CMD conan)
+    if(CONAN_CMD)
+        execute_process(
+            COMMAND ${CONAN_CMD} install ${CMAKE_SOURCE_DIR} --output-folder=${CMAKE_SOURCE_DIR} --build=missing
+            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+        )
+    endif()
+    include(${CMAKE_BINARY_DIR}/Release/generators/conan_toolchain.cmake)
+    set(CMAKE_TOOLCHAIN_FILE ${CMAKE_BINARY_DIR}/conan_toolchain.cmake)
+else()
+    message(STATUS "Boost found ;-). Version: ${Boost_VERSION}")
+    add_compile_definitions(BOOST_BEAST_USE_STD_STRING_VIEW)
+endif()
+
+find_package(OpenSSL)
+
+# Find OpenSSL
+find_package(OpenSSL REQUIRED)
+if(NOT OpenSSL_FOUND)
+    message(STATUS "OpenSSL not found. Trying to use Conan...")
+else()
+    message(STATUS "OpenSSL found ;-). Version: ${OPENSSL_VERSION}")
 endif()
 
 # Create task library
