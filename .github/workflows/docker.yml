@@ -1,0 +1,21 @@
+name: Docker Build
+
+on:
+  push:
+    branches: ["telegram"]
+  pull_request:
+    branches: ["telegram"]
+
+permissions:
+  checks: write
+  contents: read
+  pull-requests: write
+  issues: read
+
+jobs:
+    docker-build:
+      runs-on: ubuntu-latest
+
+      steps:
+        - name: Checkout repository
+          uses: actions/checkout@v4

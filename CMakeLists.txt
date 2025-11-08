@@ -32,6 +32,10 @@ set(PROJECT_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
 set(TASK_INCLUDE_DIR "${PROJECT_INCLUDE_DIR}/task")
 set(TASK_SOURCE_DIR "${PROJECT_SOURCE_DIR}/task")
 
+# Parse module directories
+set(PARSER_INCLUDE_DIR "${PROJECT_INCLUDE_DIR}/parser")
+set(PARSER_SOURCE_DIR "${PROJECT_SOURCE_DIR}/parser")
+
 # Find or fetch nlohmann_json
 find_package(nlohmann_json QUIET)
 if(NOT nlohmann_json_FOUND)
@@ -82,9 +86,21 @@ add_library(task STATIC
     "${TASK_SOURCE_DIR}/Task.cpp"
 )
 
+# Create parser library
+add_library(parser STATIC
+    "${PARSER_INCLUDE_DIR}/Parser.hpp"
+    "${PARSER_SOURCE_DIR}/Parser.cpp"
+)
+
 target_include_directories(task
     PUBLIC
     "$<BUILD_INTERFACE:${TASK_INCLUDE_DIR}>"
+    "$<INSTALL_INTERFACE:include>"
+)
+
+target_include_directories(parser
+    PUBLIC
+    "$<BUILD_INTERFACE:${PARSER_INCLUDE_DIR}>"
     "$<INSTALL_INTERFACE:include>"
 )
 
