@@ -8,7 +8,7 @@ project(check-list
 )
 
 # C++ standard requirements
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -36,49 +36,32 @@ set(TASK_SOURCE_DIR "${PROJECT_SOURCE_DIR}/task")
 set(PARSER_INCLUDE_DIR "${PROJECT_INCLUDE_DIR}/parser")
 set(PARSER_SOURCE_DIR "${PROJECT_SOURCE_DIR}/parser")
 
-# Find or fetch nlohmann_json
-find_package(nlohmann_json QUIET)
-if(NOT nlohmann_json_FOUND)
-    message(STATUS "nlohmann_json not found. Trying to download...")
-    include(FetchContent)
-    FetchContent_Declare(
-        nlohmann_json
-        GIT_REPOSITORY https://github.com/nlohmann/json.git
-        GIT_TAG v3.11.3
+# Try Conan for dependency management
+find_program(CONAN_CMD conan)
+if(CONAN_CMD)
+    message(STATUS "Found Conan, installing dependencies...")
+    execute_process(
+        COMMAND ${CONAN_CMD} install ${CMAKE_SOURCE_DIR} --output-folder=${CMAKE_BUILD_DIR} --build=missing
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+        RESULT_VARIABLE CONAN_RESULT
     )
-    FetchContent_MakeAvailable(nlohmann_json)
-    message(STATUS "nlohmann_json downloaded and ready to use.")
-else()
-    message(STATUS "nlohmann_json found ;-). Version: ${nlohmann_json_VERSION}")
-endif()
-
-# Find Boost
-find_package(Boost QUIET COMPONENTS system)
-if(NOT Boost_FOUND)
-    message(STATUS "Boost not found. Trying to use Conan...")
-    find_program(CONAN_CMD conan)
-    if(CONAN_CMD)
-        execute_process(
-            COMMAND ${CONAN_CMD} install ${CMAKE_SOURCE_DIR} --output-folder=${CMAKE_SOURCE_DIR} --build=missing
-            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-        )
+    if(CONAN_RESULT EQUAL 0)
+        message(STATUS "Conan install successful")
+        # Include the toolchain file if it exists
+        if(EXISTS "${CMAKE_BINARY_DIR}/conan_toolchain.cmake")
+            include("${CMAKE_BINARY_DIR}/conan_toolchain.cmake")
+        elseif(EXISTS "${CMAKE_BINARY_DIR}/Release/generators/conan_toolchain.cmake")
+            include("${CMAKE_BINARY_DIR}/Release/generators/conan_toolchain.cmake")
+        endif()
+    else()
+        message(WARNING "Conan install failed with result: ${CONAN_RESULT}")
     endif()
-    include(${CMAKE_BINARY_DIR}/Release/generators/conan_toolchain.cmake)
-    set(CMAKE_TOOLCHAIN_FILE ${CMAKE_BINARY_DIR}/conan_toolchain.cmake)
-else()
-    message(STATUS "Boost found ;-). Version: ${Boost_VERSION}")
-    add_compile_definitions(BOOST_BEAST_USE_STD_STRING_VIEW)
 endif()
 
-find_package(OpenSSL)
-
-# Find OpenSSL
-find_package(OpenSSL REQUIRED)
-if(NOT OpenSSL_FOUND)
-    message(STATUS "OpenSSL not found. Trying to use Conan...")
-else()
-    message(STATUS "OpenSSL found ;-). Version: ${OPENSSL_VERSION}")
-endif()
+# Find packages
+find_package(nlohmann_json QUIET)
+find_package(Boost QUIET COMPONENTS system)
+find_package(OpenSSL QUIET)
 
 # Create task library
 add_library(task STATIC
@@ -104,10 +87,20 @@ target_include_directories(parser
     "$<INSTALL_INTERFACE:include>"
 )
 
-target_link_libraries(task
-    PUBLIC
-    nlohmann_json::nlohmann_json
-)
+# Link nlohmann_json to task library if found
+if(TARGET nlohmann_json::nlohmann_json)
+    target_link_libraries(task
+        PUBLIC
+        nlohmann_json::nlohmann_json
+    )
+    message(STATUS "Linked nlohmann_json to task library")
+elseif(nlohmann_json_FOUND)
+    # Alternative way to link if target is not available
+    target_link_libraries(task PUBLIC nlohmann_json::nlohmann_json)
+    message(STATUS "Linked nlohmann_json through find_package")
+else()
+    message(WARNING "nlohmann_json not found, compilation may fail if needed")
+endif()
 
 # Create main executable
 set(CONSOLE_NAME todo)
@@ -118,11 +111,13 @@ add_executable(${CONSOLE_NAME}
 target_include_directories(${CONSOLE_NAME}
     PRIVATE
     ${TASK_INCLUDE_DIR}
+    ${PARSER_INCLUDE_DIR}
 )
 
 target_link_libraries(${CONSOLE_NAME}
     PRIVATE
     task
+    parser
 )
 
 # Installation rules
@@ -199,10 +194,30 @@ else()
     endif()
 endif()
 
-
 include(CPack)
 
 # Display project information
 message(STATUS "Project: ${PROJECT_NAME}")
 message(STATUS "Version: ${PROJECT_VERSION}")
 message(STATUS "C++ Standard: ${CMAKE_CXX_STANDARD}")
+
+# Display dependency status
+if(TARGET nlohmann_json::nlohmann_json)
+    message(STATUS "nlohmann_json: FOUND (target)")
+elseif(nlohmann_json_FOUND)
+    message(STATUS "nlohmann_json: FOUND (package)")
+else()
+    message(STATUS "nlohmann_json: NOT FOUND")
+endif()
+
+if(Boost_FOUND)
+    message(STATUS "Boost: FOUND")
+else()
+    message(STATUS "Boost: NOT FOUND")
+endif()
+
+if(OpenSSL_FOUND)
+    message(STATUS "OpenSSL: FOUND")
+else()
+    message(STATUS "OpenSSL: NOT FOUND")
+endif()

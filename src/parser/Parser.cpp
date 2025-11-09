@@ -1,3 +1,6 @@
 #include "Parser.hpp"
 
-names
+namespace parse
+{
+    
+} // namespace parse
