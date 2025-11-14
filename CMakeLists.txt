@@ -45,6 +45,7 @@ add_library(task STATIC
     ${TASK_INCLUDE}
     ${TASK_SOURCE}
 )
+target_include_directories(task PUBLIC ${TASK_DIR})
 
 # Create parser library
 file(GLOB PARSER_INCLUDE ${PARSER_DIR}/*.hpp ${PARSER_DIR}/*.h)
@@ -53,6 +54,7 @@ add_library(parser STATIC
     ${PARSER_INCLUDE}
     ${PARSER_SOURCE}
 )
+target_include_directories(parser PUBLIC ${PARSER_DIR})
 
 # Create bot library
 file(GLOB BOT_INCLUDE ${BOT_DIR}/*.hpp ${BOT_DIR}/*.h)
@@ -61,6 +63,7 @@ add_library(bot STATIC
     ${BOT_INCLUDE}
     ${BOT_SOURCE}
 )
+target_include_directories(bot PUBLIC ${BOT_DIR})
 
 # Create executables
 set(TODO_NAME todo)
@@ -78,7 +81,7 @@ target_link_libraries(task PRIVATE nlohmann_json::nlohmann_json)
 message(STATUS "nlohmann_json linked to ${TODO_NAME}-lib")
 
 # bot-lib
-target_include_directories(bot PRIVATE
+target_include_directories(bot PUBLIC
     ${Boost_INCLUDE_DIRS}
     ${OpenSSL_INCLUDE_DIRS}
     ${nlohmann_json_INCLUDE_DIRS}
@@ -92,18 +95,22 @@ target_link_libraries(bot PRIVATE
 message(STATUS "Boost, OpenSSL, nlohmann_json linked to ${BOT_NAME}-lib")
 
 # link todo-executable
-target_include_directories(${TODO_NAME}
-    PRIVATE
-    ${TASK_INCLUDE_DIR}
-    ${PARSER_INCLUDE_DIR}
-)
 target_link_libraries(${TODO_NAME}
     PRIVATE
     task
     parser
 )
 
-# TODO: Подключить всё необходимое к ${BOT_NAME} executable
+# link bot-executable
+target_link_libraries(${BOT_NAME}
+    PRIVATE
+    bot
+)
+
+# Link Windows socket library for tg-bot on Windows
+if(WIN32)
+    target_link_libraries(${BOT_NAME} PRIVATE ws2_32)
+endif()
 
 # Enable testing if requested
 if(BUILD_TEST)
