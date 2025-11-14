@@ -18,6 +18,6 @@ cmake .. -DBUILD_TEST=ON -DDEV_MODE=OFF
 
 # Сборка проекта
 echo "Сборка проекта..."
-cmake --build .
+cmake --build --config Release .
 
 echo "Сборка завершена успешно!"

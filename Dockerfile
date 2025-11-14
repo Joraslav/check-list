@@ -6,7 +6,7 @@ RUN apt update && \
       python3-pip \
       cmake \
     && \
-    pip3 install conan==2.10.1
+    pip3 install conan
 
 # Запуск conan как раньше
 COPY conanfile.txt /app/

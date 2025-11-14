@@ -1,6 +1,6 @@
 [requires]
-boost/1.82.0
-openssl/3.5.2
+boost/1.89.0
+openssl/3.6.0
 nlohmann_json/3.12.0
 [generators]
 CMakeDeps
