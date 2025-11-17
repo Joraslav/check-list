@@ -92,6 +92,9 @@ target_link_libraries(bot PRIVATE
     OpenSSL::Crypto
     nlohmann_json::nlohmann_json
 )
+if(WIN32)
+    target_link_libraries(bot PRIVATE ws2_32)
+endif()
 message(STATUS "Boost, OpenSSL, nlohmann_json linked to ${BOT_NAME}-lib")
 
 # link todo-executable
@@ -106,11 +109,6 @@ target_link_libraries(${BOT_NAME}
     PRIVATE
     bot
 )
-
-# Link Windows socket library for tg-bot on Windows
-if(WIN32)
-    target_link_libraries(${BOT_NAME} PRIVATE ws2_32)
-endif()
 
 # Enable testing if requested
 if(BUILD_TEST)
