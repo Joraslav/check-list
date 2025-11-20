@@ -1,66 +1,82 @@
 #include "Parser.hpp"
+
 #include <stdexcept>
 #include <type_traits>
+#include <unordered_map>
+#include <cctype>
+#include <charconv>
 
-namespace parse
+namespace parser
 {
-    enum class TypeCommand {ADD, LIST, CLEAR, DONE, REMOVE, EDIT, CONFIG, HELP};
+    enum class TypeCommand {ADD, LIST, CLEAR, DONE, REMOVE, EDIT, HELP};
 
-    static TypeCommand FormatInEnum(const std::string type)
+    static TypeCommand FormatInEnum(const std::string& type)
     {
-        if (type == "add") 
-            return TypeCommand::ADD;
-        else if (type == "list")
-            return TypeCommand::LIST;
-        else if (type == "clear")
-            return TypeCommand::CLEAR;
-        else if (type == "done")
-            return TypeCommand::DONE;
-        else if (type == "remove")
-            return TypeCommand::REMOVE;
-        else if (type == "edit")
-            return TypeCommand::EDIT;
-        else if (type == "config")
-            return TypeCommand::CONFIG;
-        else if (type == "help")
-            return TypeCommand::HELP;
-        else 
+        std::unordered_map<std::string, TypeCommand> u_map = 
         {
-            const std::string message = "Error: unknow command";
-            throw std::runtime_error(message);
-        }
+            {"add", TypeCommand::ADD},
+            {"list", TypeCommand::LIST},
+            {"clear", TypeCommand::CLEAR},
+            {"done", TypeCommand::DONE},
+            {"remove", TypeCommand::REMOVE},
+            {"edit", TypeCommand::EDIT},
+            {"help", TypeCommand::HELP},
+        };
+
+        auto it = u_map.find(type);
+        if (it != u_map.end()) 
+            return it->second;
+        else 
+            throw std::invalid_argument("Error: unknown command");
     }
 
     static void ValidCommandWords(const TypeCommand& check_type, int count)
     {
         bool is_type_checked = (check_type == TypeCommand::ADD) || 
                     (check_type == TypeCommand::DONE) || 
-                    (check_type == TypeCommand::REMOVE) || 
-                    (check_type == TypeCommand::EDIT) || 
-                    (check_type == TypeCommand::CONFIG);
+                    (check_type == TypeCommand::REMOVE);
 
-        if ((count < 3 || count > 3) && is_type_checked)
-        {
-            const std::string message = "Error: invalid number of command arguments";
-            throw std::runtime_error(message);
-        }
+        const std::string message = "Error: invalid number of command arguments";
+        if ((count != 3) && is_type_checked)
+            throw std::invalid_argument(message);
+
+        if (count != 4 && check_type == TypeCommand::EDIT)
+            throw std::invalid_argument(message);
+
+        if (count > 3 && check_type == TypeCommand::LIST)
+            throw std::invalid_argument(message);
     }
 
     static int ConvertWordInNumber(const std::string& str)
     {
-        size_t pos = 0;
-        int number = std::stoi(str, &pos);
-        if (pos != str.size())
-            throw std::runtime_error("Error: Extract chars");
+        int number = 0;
+        const char* first = str.data();
+        const char* last = first + str.size();
+        while (first != last && (*first == ' ' || *first == '\t'))
+            ++first;
+
+        auto res = std::from_chars(str.data(), str.data() + str.size(), number);
+        if (res.ec != std::errc() || res.ptr != str.data() + str.size())
+            throw std::invalid_argument("Error: Extra chars");
         return number;
+    }
+
+    static std::string ConvertToLower(const std::string& str)
+    {
+        std::string convert_str = str;
+        for (char& c : convert_str)
+            c = std::tolower(c);
+        
+        return convert_str;
     }
 
     void Parser::Parse(const int& argc, const char** argv)
     {
         if (argc < 2)
-            throw std::runtime_error("Error: no command entered");
+            throw std::invalid_argument("Error: no command entered");
         
-        TypeCommand type = FormatInEnum(std::string(argv[1]));
+        std::string type_str = ConvertToLower(std::string(argv[1]));
+        TypeCommand type = FormatInEnum(type_str);
         ValidCommandWords(type, argc);
         switch (type)
         {
@@ -68,12 +84,22 @@ namespace parse
             {    
                 command.type_ = "add";
                 for (int i = 2; i < argc; ++i)
-                    command.task_text_ += " " + std::string(argv[i]);
+                {
+                    std::string tmp_str = ConvertToLower(std::string(argv[i]));
+                    command.task_text_ += " " + tmp_str;
+                }
                 break;
             }
             case TypeCommand::LIST:
             {    
-
+                command.type_ = "list";
+                if (argc == 3)
+                {    
+                    std::string type_list = ConvertToLower(std::string(argv[2]));
+                    if (type_list != "pending" && type_list != "completed")
+                        throw std::invalid_argument("Error: unknown list options");
+                    command.task_text_ = type_list;
+                }
                 break;
             }
             case TypeCommand::CLEAR:
@@ -95,12 +121,12 @@ namespace parse
             }
             case TypeCommand::EDIT:
             {    
-
-                break;
-            }
-            case TypeCommand::CONFIG:
-            {   
-
+                command.id_ = ConvertWordInNumber(argv[2]);
+                for (int i = 3; i < argc; ++i)
+                {    
+                    std::string tmp_str = ConvertToLower(std::string(argv[i]));
+                    command.task_text_ += " " + tmp_str;
+                }
                 break;
             }
             case TypeCommand::HELP:
@@ -109,7 +135,10 @@ namespace parse
                 break;
             }
             default:
+            {    
+                throw std::runtime_error("Error: unknown command");
                 break;
+            }
         }   
     }
-} // namespace parse
+} // namespace parser
