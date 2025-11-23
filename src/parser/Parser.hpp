@@ -1,29 +1,74 @@
+// The file describes a Parser class that stores the type, option, text, and
+// index of a command according to the selected command. Some do not work with
+// indexes, options, and indexes, so the default Command structure fields are
+// defined for them.
+// DEV_MODE is used to configure paths and directories for application data
+
 #pragma once
 
 #include <string>
 #include <string_view>
 #include <vector>
+#include <variant>
 
 namespace parser 
 {
+   // Types of commands
+   enum class TypeCommand { ADD, LIST, CLEAR, DONE, REMOVE, EDIT, HELP
+      #ifdef DEV_MODE
+      , CONFIG
+      #endif
+   };
+
+   // Options of the list command
+   enum class ListOption { PENDING, COMPLETED };
+
+   #ifdef DEV_MODE
+   // Options of the config command
+   enum class ConfigOption { PATH, NAME };
+   #endif
+
+   // Options depending on the command
+   using CommandOption = std::variant<std::monostate, ListOption
+   #ifdef DEV_MODE
+   , ConfigOption
+   #endif
+   >;
+
+   // Converting a string to lowercase
+   std::string ConvertToLower(const std::string& str);
+
    class Parser 
    {
       public:
          Parser() = default;
 
-         const std::string GetType() const { return command.type_; }
+         // Get the command type
+         const TypeCommand GetType() const { return command.type; }
+
+         // Get the command option
+         const CommandOption GetOption() const { return command.option; }
          
-         const std::string GetTaskText() const { return command.task_text_; }
+         // Get the command text
+         const std::string GetTaskText() const { return command.text_command; }
 
-         const int GetId() const { return command.id_;}
+         // Get the command index 
+         const int GetId() const { return command.id;}
 
+         // Parsing the entered command
          void Parse(const int& argc, const char** argv);
+
       private:
          struct Command
          {
-            std::string type_ = "";
-            std::string task_text_ = "";
-            int id_ = -1;
+            // Type command
+            TypeCommand type = TypeCommand::HELP;
+            // Command option
+            CommandOption option = std::monostate{};
+            // Description of the command
+            std::string text_command = "";
+            // The command index 
+            int id = -1;
          };
          Command command;
 };
