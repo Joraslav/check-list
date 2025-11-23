@@ -21,8 +21,6 @@ void PrintHelp() {
     std::cout << "  done <index>        Toggle task completion status\n";
     std::cout << "  remove <index>      Remove a task\n";
     std::cout << "  edit <index> <text> Edit a task\n";
-    std::cout << "  config path <path>  Set the path for task files\n";
-    std::cout << "  config name <name>  Set the filename for task list\n";
     std::cout << "  help                Show this help message\n";
 }
 
@@ -40,148 +38,165 @@ int main(int argc, char** argv) {
             return 0;
         }
 
-        std::string command = argv[1];
-
-        if (command == "add") {
-            if (argc < 3) {
-                std::cerr << "Error: 'add' command requires a task description\n";
-                return 1;
-            }
-
-            std::string task_text;
-            for (int i = 2; i < argc; ++i) {
-                if (i > 2) {
-                    task_text += " ";
-                }
-                task_text += argv[i];
-            }
-
-            manager.AddTask(task_text);
-            manager.Save();
-            std::cout << "Task added successfully.\n";
-        } else if (command == "list") {
-            if (argc > 2) {
-                std::string filter = argv[2];
-                if (filter == "pending") {
-                    manager.PrintTasks(false);
-                } else if (filter == "completed") {
-                    manager.PrintTasks(true);
-                } else {
-                    std::cerr << "Error: Unknown filter '" << filter
-                              << "'. Use 'pending' or 'completed'.\n";
-                    return 1;
-                }
-            } else {
-                manager.PrintTasks();
-            }
-        } else if (command == "clear") {
-            manager.ClearTasks();
-            manager.Save();
-            std::cout << "All tasks in " << manager.GetFullName() << " cleared successfully\n";
-        } else if (command == "done") {
-            if (argc < 3) {
-                std::cerr << "Error: 'done' command requires a task index\n";
-                return 1;
-            }
-
-            try {
-                size_t index = std::stoull(argv[2]);
-                if (!manager.TaskExists(index)) {
-                    std::cerr << "Error: Task with index " << index << " does not exist.\n";
-                    return 1;
-                }
-                manager.ToggleTask(index);
+        // Обработка и действие в зависимости от команды
+        std::string command = parser::ConvertToLower(std::string(argv[1]));
+        parser::Parser parser_obj;
+        parser_obj.Parse(argc, argv);
+        parser::TypeCommand type_command = parser_obj.GetType();
+        switch(type_command){
+            case parser::TypeCommand::ADD:
+            {
+                manager.AddTask(parser_obj.GetTaskText());
                 manager.Save();
-                std::cout << "Task status toggled successfully.\n";
-            } catch (const std::invalid_argument&) {
-                std::cerr << "Error: Invalid index '" << argv[2]
-                          << "'. Please provide a valid number.\n";
-                return 1;
-            } catch (const std::out_of_range& e) {
-                std::cerr << "Error: " << e.what() << "\n";
-                return 1;
+                std::cout << "Task added successfully.\n";
+                break;
             }
-        } else if (command == "remove") {
-            if (argc < 3) {
-                std::cerr << "Error: 'remove' command requires a task index\n";
-                return 1;
-            }
-
-            try {
-                size_t index = std::stoull(argv[2]);
-                if (!manager.TaskExists(index)) {
-                    std::cerr << "Error: Task with index " << index << " does not exist.\n";
+            case parser::TypeCommand::LIST:
+            {
+                try {
+                    if (auto pList = std::get_if<parser::ListOption>(&parser_obj.GetOption())) {
+                        const auto& list_option = *pList;
+                        switch (list_option)
+                        {
+                        case parser::ListOption::PENDING: {
+                            manager.PrintTasks(false);
+                            break;
+                        }
+                        case parser::ListOption::COMPLETED: {
+                            manager.PrintTasks(true);
+                            break;
+                        }
+                        default:
+                            throw std::invalid_argument (" Unknown option list.");
+                            break;
+                        }
+                    }
+                    else {
+                        manager.PrintTasks();
+                    }
+                    break;
+                } catch (const std::invalid_argument& list_ex){
+                    std::cerr << "Error: " << list_ex.what() << '\n';
                     return 1;
                 }
-                manager.RemoveTask(index);
+                
+                break;
+            }
+            case parser::TypeCommand::CLEAR:
+            {
+                manager.ClearTasks();
                 manager.Save();
-                std::cout << "Task removed successfully.\n";
-            } catch (const std::invalid_argument&) {
-                std::cerr << "Error: Invalid index '" << argv[2]
-                          << "'. Please provide a valid number.\n";
-                return 1;
-            } catch (const std::out_of_range& e) {
-                std::cerr << "Error: " << e.what() << "\n";
-                return 1;
+                std::cout << "All tasks in " << manager.GetFullName() << " cleared successfully\n";
+                break;
             }
-        } else if (command == "edit") {
-            if (argc < 4) {
-                std::cerr << "Error: 'edit' command requires a task index and new text\n";
-                return 1;
-            }
+            case parser::TypeCommand::DONE:
+            {
+                try {
+                    if (parser_obj.GetId() < 0) {
+                        throw std::invalid_argument (" Negative index.\n");
+                    }
 
-            try {
-                size_t index = std::stoull(argv[2]);
-                if (!manager.TaskExists(index)) {
-                    std::cerr << "Error: Task with index " << index << " does not exist.\n";
+                    if (!manager.TaskExists(parser_obj.GetId())) {
+                        std::string id = std::to_string(parser_obj.GetId()); 
+                        throw std::invalid_argument (" Index " + id + " does not exist.\n");
+                    }
+
+                    manager.ToggleTask(parser_obj.GetId());
+                    manager.Save();
+                    std::cout << "Task status toggled successfully.\n";
+                    break;
+                } catch (const std::invalid_argument& done_ex){
+                    std::cerr << "Error: " << done_ex.what() << '\n';
                     return 1;
                 }
+            }
+            case parser::TypeCommand::REMOVE:
+            {
+                try {
+                    if (parser_obj.GetId() < 0) {
+                        throw std::invalid_argument(" Negative index.\n");
+                    }
 
-                std::string new_text;
-                for (int i = 3; i < argc; ++i) {
-                    if (i > 3) new_text += " ";
-                    new_text += argv[i];
+                    if (!manager.TaskExists(parser_obj.GetId())) {
+                        std::string id = std::to_string(parser_obj.GetId()); 
+                        throw std::invalid_argument (" Index " + id + " does not exist.\n");
+                    }
+
+                    manager.RemoveTask(parser_obj.GetId());
+                    manager.Save();
+                    std::cout << "Task removed successfully.\n";
+                    break;
+                } catch (const std::invalid_argument& remove_ex){
+                    std::cerr << "Error: " << remove_ex.what() << '\n';
+                    return 1;
                 }
+            }
+            case parser::TypeCommand::EDIT:
+            {
+                try {
+                    if (parser_obj.GetId() < 0) {
+                        throw std::invalid_argument(" Negative index.\n");
+                    }
 
-                manager.EditTask(index, new_text);
-                manager.Save();
-                std::cout << "Task edited successfully.\n";
-            } catch (const std::invalid_argument&) {
-                std::cerr << "Error: Invalid index '" << argv[2]
-                          << "'. Please provide a valid number.\n";
-                return 1;
-            } catch (const std::out_of_range& e) {
-                std::cerr << "Error: " << e.what() << "\n";
+                    if (!manager.TaskExists(parser_obj.GetId())) {
+                        std::string id = std::to_string(parser_obj.GetId()); 
+                        throw std::invalid_argument (" Index " + id + " does not exist.\n");
+                    }
+
+                    manager.EditTask(parser_obj.GetId(), parser_obj.GetTaskText());
+                    manager.Save();
+                    std::cout << "Task edited successfully.\n";
+                    break;
+                } catch (const std::invalid_argument& edit_ex){
+                    std::cerr << "Error: " << edit_ex.what() << '\n';
+                    return 1;
+                }
+            }
+            case parser::TypeCommand::HELP:
+            {
+                PrintHelp();
+                break;
+            }
+            #ifdef DEV_MODE
+            case parser::TypeCommand::CONFIG:
+            {
+                try {
+                    if (auto pConfig = std::get_if<parser::ConfigOption>(&parser_obj.GetOption())) {
+                        const auto& config_option = *pConfig;
+                        switch (config_option)
+                        {
+                        case parser::ConfigOption::PATH: {
+                            TaskManager::SetPath(value, DEFAULT_CONFIG_DIR + "/" + DEFAULT_CONFIG_NAME);
+                            std::cout << "Path configured successfully.\n";
+                            break;
+                        }
+                        case parser::ConfigOption::NAME: {
+                            TaskManager::SetName(value, DEFAULT_CONFIG_DIR + "/" + DEFAULT_CONFIG_NAME);
+                            std::cout << "Filename configured successfully.\n";
+                            break;
+                        }
+                        default:
+                            throw std::invalid_argument (" Unknown option config.");
+                            break;
+                        }
+                    }
+                    else {
+                        throw std::invalid_argument (" Unknown option config.");
+                    }
+                    break;
+                } catch (const std::invalid_argument& config_ex){
+                    std::cerr << "Error: " << config_ex.what() << '\n';
+                    return 1;
+                }
+                
+            }
+            #endif
+            default: {
+                std::cerr << "Error: Unknown command '" << command
+                        << "'. Use 'help' to see available commands.\n";
                 return 1;
             }
-        } else if (command == "config") {
-            if (argc < 4) {
-                std::cerr << "Error: 'config' command requires 'path' or 'name' and a value\n";
-                return 1;
-            }
-
-            std::string config_command = argv[2];
-            std::string value = argv[3];
-
-            if (config_command == "path") {
-                TaskManager::SetPath(value, DEFAULT_CONFIG_DIR + "/" + DEFAULT_CONFIG_NAME);
-                std::cout << "Path configured successfully.\n";
-            } else if (config_command == "name") {
-                TaskManager::SetName(value, DEFAULT_CONFIG_DIR + "/" + DEFAULT_CONFIG_NAME);
-                std::cout << "Filename configured successfully.\n";
-            } else {
-                std::cerr << "Error: Unknown config command '" << config_command
-                          << "'. Use 'path' or 'name'.\n";
-                return 1;
-            }
-        } else if (command == "help") {
-            PrintHelp();
-        } else {
-            std::cerr << "Error: Unknown command '" << command
-                      << "'. Use 'help' to see available commands.\n";
-            return 1;
         }
-
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << '\n';
         return 1;
