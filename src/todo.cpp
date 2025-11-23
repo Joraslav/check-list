@@ -92,16 +92,18 @@ int main(int argc, char** argv) {
             case parser::TypeCommand::DONE:
             {
                 try {
-                    if (parser_obj.GetId() < 0) {
-                        throw std::invalid_argument (" Negative index.\n");
+                    auto index_opt = parser_obj.GetTaskIndex();
+                    if (!index_opt.has_value()) {
+                        throw std::invalid_argument(" Invalid index.\n");
                     }
 
-                    if (!manager.TaskExists(parser_obj.GetId())) {
-                        std::string id = std::to_string(parser_obj.GetId()); 
-                        throw std::invalid_argument (" Index " + id + " does not exist.\n");
+                    size_t index = index_opt.value();
+
+                    if (!manager.TaskExists(index)) {
+                        throw std::invalid_argument (" Index " + std::to_string(index) + " does not exist.\n");
                     }
 
-                    manager.ToggleTask(parser_obj.GetId());
+                    manager.ToggleTask(index);
                     manager.Save();
                     std::cout << "Task status toggled successfully.\n";
                     break;
@@ -113,16 +115,18 @@ int main(int argc, char** argv) {
             case parser::TypeCommand::REMOVE:
             {
                 try {
-                    if (parser_obj.GetId() < 0) {
-                        throw std::invalid_argument(" Negative index.\n");
+                    auto index_opt = parser_obj.GetTaskIndex();
+                    if (!index_opt.has_value()) {
+                        throw std::invalid_argument(" Invalid index.\n");
                     }
 
-                    if (!manager.TaskExists(parser_obj.GetId())) {
-                        std::string id = std::to_string(parser_obj.GetId()); 
-                        throw std::invalid_argument (" Index " + id + " does not exist.\n");
+                    size_t index = index_opt.value();
+
+                    if (!manager.TaskExists(index)) {
+                        throw std::invalid_argument (" Index " + std::to_string(index) + " does not exist.\n");
                     }
 
-                    manager.RemoveTask(parser_obj.GetId());
+                    manager.RemoveTask(index);
                     manager.Save();
                     std::cout << "Task removed successfully.\n";
                     break;
@@ -134,16 +138,18 @@ int main(int argc, char** argv) {
             case parser::TypeCommand::EDIT:
             {
                 try {
-                    if (parser_obj.GetId() < 0) {
-                        throw std::invalid_argument(" Negative index.\n");
+                    auto index_opt = parser_obj.GetTaskIndex();
+                    if (!index_opt.has_value()) {
+                        throw std::invalid_argument(" Invalid index.\n");
                     }
 
-                    if (!manager.TaskExists(parser_obj.GetId())) {
-                        std::string id = std::to_string(parser_obj.GetId()); 
-                        throw std::invalid_argument (" Index " + id + " does not exist.\n");
+                    size_t index = index_opt.value();
+
+                    if (!manager.TaskExists(index)) {
+                        throw std::invalid_argument (" Index " + std::to_string(index) + " does not exist.\n");
                     }
 
-                    manager.EditTask(parser_obj.GetId(), parser_obj.GetTaskText());
+                    manager.EditTask(index, parser_obj.GetTaskText());
                     manager.Save();
                     std::cout << "Task edited successfully.\n";
                     break;

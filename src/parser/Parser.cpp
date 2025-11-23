@@ -4,6 +4,7 @@
 #include <charconv>
 #include <stdexcept>
 #include <unordered_map>
+#include <locale>
 
 namespace parser {
 
@@ -19,9 +20,8 @@ static TypeCommand FormatInEnum(const std::string& type) {
         #endif
     };
 
-    auto it = u_map.find(type);
-    if (it != u_map.end()) {
-        return it->second;
+    if (u_map.contains(type)) {
+        return u_map[type];
     } else {
         throw std::invalid_argument("Unknown command");
     }
@@ -72,8 +72,8 @@ static int ConvertWordInNumber(const std::string& str) {
         ++first;
     }
 
-    auto res = std::from_chars(str.data(), str.data() + str.size(), number);
-    if (res.ec != std::errc() || res.ptr != str.data() + str.size()) {
+    auto res = std::from_chars(first, last, number);
+    if (res.ec != std::errc() || res.ptr != last) {
         throw std::invalid_argument("Extra chars");
     }
     return number;
@@ -82,8 +82,9 @@ static int ConvertWordInNumber(const std::string& str) {
 // Converting a string to lowercase
 std::string ConvertToLower(const std::string& str) {
     std::string convert_str = str;
+    std::locale loc;
     for (char& c : convert_str) {
-        c = std::tolower(c);
+        c = std::tolower(c, loc);
     }
     return convert_str;
 }
@@ -127,16 +128,37 @@ void Parser::Parse(const int& argc, const char** argv) {
         }
         case TypeCommand::DONE: {
             command.type = type;
-            command.id = ConvertWordInNumber(argv[2]);
+
+            int number = ConvertWordInNumber(argv[2]);
+            if (number < 0) {
+                command.task_index = std::nullopt;
+            }
+            else {
+                command.task_index = number;
+            }
             break;
         }
         case TypeCommand::REMOVE: {
             command.type = type;
-            command.id = ConvertWordInNumber(argv[2]);
+            
+            int number = ConvertWordInNumber(argv[2]);
+            if (number < 0) {
+                command.task_index = std::nullopt;
+            }
+            else {
+                command.task_index = number;
+            }
             break;
         }
         case TypeCommand::EDIT: {
-            command.id = ConvertWordInNumber(argv[2]);
+            int number = ConvertWordInNumber(argv[2]);
+            if (number < 0) {
+                command.task_index = std::nullopt;
+            }
+            else {
+                command.task_index = number;
+            }
+
             for (int i = 3; i < argc; ++i) {
                 std::string tmp_str = ConvertToLower(std::string(argv[i]));
                 command.text_command += " " + tmp_str;

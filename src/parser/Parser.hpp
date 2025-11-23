@@ -10,6 +10,7 @@
 #include <string_view>
 #include <vector>
 #include <variant>
+#include <optional>
 
 namespace parser 
 {
@@ -53,7 +54,7 @@ namespace parser
          const std::string GetTaskText() const { return command.text_command; }
 
          // Get the command index 
-         const int GetId() const { return command.id;}
+         const std::optional<size_t> GetTaskIndex() const { return command.task_index;}
 
          // Parsing the entered command
          void Parse(const int& argc, const char** argv);
@@ -68,7 +69,7 @@ namespace parser
             // Description of the command
             std::string text_command = "";
             // The command index 
-            int id = -1;
+            std::optional<size_t> task_index;
          };
          Command command;
 };
