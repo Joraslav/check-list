@@ -6,13 +6,11 @@
 namespace bot {
 
 Message::Message(const json& data) {
-    // Проверяем, что data является объектом
     if (!data.is_object()) {
         throw std::invalid_argument("Message data must be a JSON object");
     }
     
     if (data.contains("message_id")) {
-        // Проверяем, что message_id является числом
         if (!data["message_id"].is_number()) {
             throw std::invalid_argument("message_id must be a number");
         }
@@ -20,7 +18,6 @@ Message::Message(const json& data) {
     }
     
     if (data.contains("chat") && data["chat"].contains("id")) {
-        // Проверяем, что chat.id является числом
         if (!data["chat"]["id"].is_number()) {
             throw std::invalid_argument("chat.id must be a number");
         }
@@ -28,7 +25,6 @@ Message::Message(const json& data) {
     }
     
     if (data.contains("text")) {
-        // Проверяем, что text является строкой
         if (!data["text"].is_string()) {
             throw std::invalid_argument("text must be a string");
         }
@@ -46,7 +42,6 @@ std::string Message::GetCommand() const {
         return "";
     }
     
-    // Извлекаем команду из текста (до первого пробела)
     size_t space_pos = text_.find(' ');
     if (space_pos != std::string::npos) {
         return text_.substr(1, space_pos - 1);  // Убираем '/' в начале

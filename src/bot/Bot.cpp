@@ -1,8 +1,8 @@
 #include "Bot.hpp"
 
-#include "Task.hpp"
 #include "CommandHandler.hpp"
 #include "Message.hpp"
+#include "Task.hpp"
 
 #ifdef WIN32
 #include <windows.h>
@@ -66,100 +66,84 @@ void Bot::Start() {
                 }
             }
 
-            // Небольшая задержка чтобы не перегружать API
             std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         } catch (const std::exception& e) {
             std::cerr << "Error in bot loop: " << e.what() << std::endl;
-            std::this_thread::sleep_for(std::chrono::seconds(5));  // Ждем перед повторной попыткой
+            std::this_thread::sleep_for(std::chrono::seconds(5));
         }
     }
 }
 
-void Bot::Stop() {
-    // Пока оставим пустым, в будущем можно добавить логику остановки
-}
+void Bot::Stop() { std::cout << "Stoping Telegram bot..." << std::endl; }
 
 Bot::json Bot::MakeRequest(const std::string& method, const Bot::json& data) {
-    // Подготавливаем параметры подключения
     std::string host = "api.telegram.org";
     std::string port = "443";
     std::string target = "/bot" + token_ + "/" + method;
 
-    // Создаем io_context
     net::io_context ioc;
 
-    // Создаем SSL контекст
     ssl::context ssl_ctx(ssl::context::tlsv12_client);
     ssl_ctx.set_default_verify_paths();
 
-    // Создаем resolver и stream
     tcp::resolver resolver(ioc);
     beast::ssl_stream<beast::tcp_stream> stream(ioc, ssl_ctx);
 
-    // Устанавливаем SNI Hostname (многие серверы требуют это)
     if (!SSL_set_tlsext_host_name(stream.native_handle(), host.c_str())) {
         beast::error_code ec{static_cast<int>(::ERR_get_error()), net::error::get_ssl_category()};
         throw beast::system_error{ec};
     }
 
-    // Ищем endpoint
     const auto results = resolver.resolve(host, port);
     beast::get_lowest_layer(stream).connect(results);
 
-    // Выполняем SSL handshake
     stream.handshake(ssl::stream_base::client);
 
-    // Подготавливаем HTTP запрос
     http::request<http::string_body> req{http::verb::post, target, 11};
     req.set(http::field::host, host);
     req.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
     req.set(http::field::content_type, "application/json");
 
-    // Добавляем данные в тело запроса
     req.body() = data.dump();
     req.prepare_payload();
 
     http::write(stream, req);
 
-    // Получаем ответ
     beast::flat_buffer buffer;
     http::response<http::dynamic_body> res;
     http::read(stream, buffer, res);
 
-    // Закрываем соединение
     beast::error_code ec;
     stream.shutdown(ec);
     if (ec == net::error::eof) {
         ec = {};
     }
 
-    // Парсим JSON ответ
     std::string response_body = boost::beast::buffers_to_string(res.body().data());
-    
-    // Проверяем статус ответа
+
     if (res.result() != http::status::ok) {
-        throw std::runtime_error("HTTP request failed with status: " + std::to_string(res.result_int()) +
-                                 ", body: " + response_body);
+        throw std::runtime_error("HTTP request failed with status: " +
+                                 std::to_string(res.result_int()) + ", body: " + response_body);
     }
-    
-    // Проверяем, что ответ является валидным JSON
+
     try {
         Bot::json response_json = Bot::json::parse(response_body);
-        
-        // Проверяем, что в ответе есть поле "ok"
+
         if (response_json.contains("ok") && response_json["ok"].is_boolean()) {
             if (!response_json["ok"]) {
                 // Если "ok" равно false, выбрасываем исключение с сообщением об ошибке
                 std::string error_message = "Telegram API error";
-                if (response_json.contains("description") && response_json["description"].is_string()) {
+                if (response_json.contains("description") &&
+                    response_json["description"].is_string()) {
                     error_message = response_json["description"];
                 }
                 throw std::runtime_error("Telegram API error: " + error_message);
             }
         } else {
-            throw std::runtime_error("Invalid Telegram API response: missing or invalid 'ok' field");
+            throw std::runtime_error(
+                "Invalid Telegram API response: missing or invalid 'ok' field");
         }
-        
+
         return response_json;
     } catch (const Bot::json::parse_error& e) {
         throw std::runtime_error("Failed to parse JSON response: " + std::string(e.what()) +

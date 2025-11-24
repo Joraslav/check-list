@@ -30,7 +30,6 @@ class CommandHandler {
     void HandleRemove(const Message& message, std::function<void(const std::string&, long)> send_message_callback);
     void HandleClear(const Message& message, std::function<void(const std::string&, long)> send_message_callback);
     
-    // Вспомогательные методы
     std::string GetTaskListString() const;
     std::string ExtractCommandArgument(const std::string& text, const std::string& command) const;
 };
