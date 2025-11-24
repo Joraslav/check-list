@@ -58,6 +58,12 @@ void CommandHandler::HandleAdd(const Message& message, std::function<void(const 
         return;
     }
     
+    // Проверяем длину текста задачи
+    if (task_text.length() > 1000) {
+        send_message_callback("Текст задачи слишком длинный (максимум 1000 символов)", message.GetChatId());
+        return;
+    }
+    
     try {
         task_manager_.AddTask(task_text);
         task_manager_.Save();
@@ -89,6 +95,12 @@ void CommandHandler::HandleDone(const Message& message, std::function<void(const
     }
     
     try {
+        // Проверяем, что строка содержит только цифры
+        if (index_str.find_first_not_of("0123456789") != std::string::npos) {
+            send_message_callback("Неверный формат номера задачи. Пожалуйста, укажите число.", message.GetChatId());
+            return;
+        }
+        
         size_t index = std::stoull(index_str);
         
         if (!task_manager_.TaskExists(index)) {
@@ -115,6 +127,12 @@ void CommandHandler::HandleRemove(const Message& message, std::function<void(con
     }
     
     try {
+        // Проверяем, что строка содержит только цифры
+        if (index_str.find_first_not_of("0123456789") != std::string::npos) {
+            send_message_callback("Неверный формат номера задачи. Пожалуйста, укажите число.", message.GetChatId());
+            return;
+        }
+        
         size_t index = std::stoull(index_str);
         
         if (!task_manager_.TaskExists(index)) {

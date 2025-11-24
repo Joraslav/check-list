@@ -5,6 +5,7 @@ project(check-list
     VERSION 0.3.0
     LANGUAGES C CXX
     DESCRIPTION "Check-list application for task management"
+    HOMEPAGE_URL "https://github.com/Joraslav/check-list"
 )
 
 # C++ standard requirements
@@ -19,10 +20,12 @@ add_compile_options(
     -pedantic
     -Wno-unused-parameter
 )
+add_compile_definitions(BOOST_BEAST_USE_STD_STRING_VIEW)
 
 # Build options
 option(BUILD_TEST "Build tests" OFF)
 option(DEV_MODE "Using develop mode" ON)
+
 
 # Task module directories
 set(TASK_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/task)
@@ -63,7 +66,7 @@ add_library(bot STATIC
     ${BOT_INCLUDE}
     ${BOT_SOURCE}
 )
-target_include_directories(bot PUBLIC ${BOT_DIR})
+target_include_directories(bot PUBLIC ${BOT_DIR} ${TASK_DIR})
 
 # Create executables
 set(TODO_NAME todo)
@@ -91,6 +94,7 @@ target_link_libraries(bot PRIVATE
     OpenSSL::SSL
     OpenSSL::Crypto
     nlohmann_json::nlohmann_json
+    task
 )
 if(WIN32)
     target_link_libraries(bot PRIVATE ws2_32)

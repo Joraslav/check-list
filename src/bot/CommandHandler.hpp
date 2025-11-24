@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Message.hpp"
-#include "../task/Task.hpp"
+#include "Task.hpp"
 
 #include <nlohmann/json.hpp>
 #include <functional>

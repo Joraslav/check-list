@@ -1,6 +1,6 @@
 #include "Bot.hpp"
 
-#include "../task/Task.hpp"
+#include "Task.hpp"
 #include "CommandHandler.hpp"
 #include "Message.hpp"
 
@@ -103,9 +103,7 @@ Bot::json Bot::MakeRequest(const std::string& method, const Bot::json& data) {
     }
 
     // Ищем endpoint
-    auto const results = resolver.resolve(host, port);
-
-    // Делаем подключение
+    const auto results = resolver.resolve(host, port);
     beast::get_lowest_layer(stream).connect(results);
 
     // Выполняем SSL handshake
@@ -121,7 +119,6 @@ Bot::json Bot::MakeRequest(const std::string& method, const Bot::json& data) {
     req.body() = data.dump();
     req.prepare_payload();
 
-    // Отправляем запрос
     http::write(stream, req);
 
     // Получаем ответ
@@ -138,7 +135,36 @@ Bot::json Bot::MakeRequest(const std::string& method, const Bot::json& data) {
 
     // Парсим JSON ответ
     std::string response_body = boost::beast::buffers_to_string(res.body().data());
-    return Bot::json::parse(response_body);
+    
+    // Проверяем статус ответа
+    if (res.result() != http::status::ok) {
+        throw std::runtime_error("HTTP request failed with status: " + std::to_string(res.result_int()) +
+                                 ", body: " + response_body);
+    }
+    
+    // Проверяем, что ответ является валидным JSON
+    try {
+        Bot::json response_json = Bot::json::parse(response_body);
+        
+        // Проверяем, что в ответе есть поле "ok"
+        if (response_json.contains("ok") && response_json["ok"].is_boolean()) {
+            if (!response_json["ok"]) {
+                // Если "ok" равно false, выбрасываем исключение с сообщением об ошибке
+                std::string error_message = "Telegram API error";
+                if (response_json.contains("description") && response_json["description"].is_string()) {
+                    error_message = response_json["description"];
+                }
+                throw std::runtime_error("Telegram API error: " + error_message);
+            }
+        } else {
+            throw std::runtime_error("Invalid Telegram API response: missing or invalid 'ok' field");
+        }
+        
+        return response_json;
+    } catch (const Bot::json::parse_error& e) {
+        throw std::runtime_error("Failed to parse JSON response: " + std::string(e.what()) +
+                                 ", body: " + response_body);
+    }
 }
 
 Bot::json Bot::GetUpdates(long offset) {
