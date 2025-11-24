@@ -15,6 +15,7 @@ RUN apt-get update && \
     && \
     pipx install conan==2.22.2 && \
     pipx ensurepath
+    ENV PATH="/root/.local/bin:${PATH}"
 
 # Запуск conan как раньше
 COPY conanfile.txt /app/
