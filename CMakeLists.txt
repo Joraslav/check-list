@@ -26,7 +26,6 @@ add_compile_definitions(BOOST_BEAST_USE_STD_STRING_VIEW)
 option(BUILD_TEST "Build tests" OFF)
 option(DEV_MODE "Using develop mode" ON)
 
-
 # Task module directories
 set(TASK_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src/task)
 
