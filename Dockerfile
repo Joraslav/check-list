@@ -12,6 +12,7 @@ RUN apt-get update && \
       ca-certificates \
       gnupg \
       lsb-release \
+      software-properties-common \
     && \
     # Установка CMake 3.31.0 или выше
     wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null && \
