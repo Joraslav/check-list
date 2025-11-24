@@ -13,7 +13,8 @@ RUN apt-get update && \
       gnupg \
       lsb-release \
     && \
-    pipx install conan==2.22.2
+    pipx install conan==2.22.2 && \
+    pipx ensurepath
 
 # Запуск conan как раньше
 COPY conanfile.txt /app/
