@@ -4,6 +4,8 @@ FROM gcc:13.2 AS build
 RUN apt-get update && \
     apt-get install -y \
       python3-pip \
+      python3-full \
+      pipx \
       cmake \
       git \
       apt-transport-https \
@@ -11,7 +13,7 @@ RUN apt-get update && \
       gnupg \
       lsb-release \
     && \
-    pip3 install conan==2.22.2
+    pipx install conan==2.22.2
 
 # Запуск conan как раньше
 COPY conanfile.txt /app/
