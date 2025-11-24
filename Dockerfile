@@ -1,11 +1,15 @@
 # Не просто создаём образ, но даём ему имя build
-FROM gcc:13.2 as build
+FROM gcc:13.2 AS build
 
-RUN apt update && \
-    apt install -y \
+RUN apt-get update && \
+    apt-get install -y \
       python3-pip \
       cmake \
       git \
+      apt-transport-https \
+      ca-certificates \
+      gnupg \
+      lsb-release \
     && \
     pip3 install conan==2.22.2
 
