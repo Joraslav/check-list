@@ -27,13 +27,13 @@ class Parser {
  public:
     Parser() = default;
 
-    const TypeCommand GetTypeCommand() const { return command_.type; }
+    TypeCommand GetTypeCommand() const { return command_.type; }
 
-    const CommandOption GetCommandOption() const { return command_.option; }
+    CommandOption GetCommandOption() const { return command_.option; }
 
-    const std::string GetTaskText() const { return command_.text; }
+    std::string GetTaskText() const { return command_.text; }
 
-    const std::optional<size_t> GetTaskIndex() const { return command_.task_index; }
+    std::optional<size_t> GetTaskIndex() const { return command_.task_index; }
 
     void Parse(const int& argc, const char** argv);
 
