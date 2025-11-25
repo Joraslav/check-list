@@ -1,28 +1,24 @@
-# Не просто создаём образ, но даём ему имя build
 FROM gcc:14.2 AS build
 
-# Установка CMake нужной версии
 RUN apt-get update && \
     apt-get install -y \
-      python3-pip \
-      python3-full \
-      pipx \
-      git \
-      apt-transport-https \
-      ca-certificates \
-      gnupg \
-      lsb-release \
-      software-properties-common \
+    python3-pip \
+    python3-full \
+    pipx \
+    git \
+    apt-transport-https \
+    ca-certificates \
+    gnupg \
+    lsb-release \
+    cmake \
+    software-properties-common \
     && \
-    wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null && \
-    apt-add-repository "deb https://apt.kitware.com/ubuntu/ $(lsb_release -cs) main" && \
-    apt-get update && \
-    apt-get install -y cmake=3.31.0-0kitware1 && \
     pipx install conan==2.22.2 && \
     pipx ensurepath && \
     # Проверка установленной версии CMake
     cmake --version
-    ENV PATH="/root/.local/bin:${PATH}"
+    
+ENV PATH="/root/.local/bin:${PATH}"
 
 # Запуск conan как раньше
 COPY conanfile.txt /app/

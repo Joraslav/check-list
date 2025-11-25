@@ -1,196 +1,174 @@
 #include "Parser.hpp"
 
+#include <algorithm>
 #include <cctype>
 #include <charconv>
+#include <format>
+#include <locale>
+#include <ranges>
 #include <stdexcept>
 #include <unordered_map>
-#include <locale>
 
 namespace parser {
 
-// Converting a command string to an enum type
-static TypeCommand FormatInEnum(const std::string& type) {
-    std::unordered_map<std::string, TypeCommand> u_map = {
-        {"add", TypeCommand::ADD},       {"list", TypeCommand::LIST},
-        {"clear", TypeCommand::CLEAR},   {"done", TypeCommand::DONE},
-        {"remove", TypeCommand::REMOVE}, {"edit", TypeCommand::EDIT},
-        {"help", TypeCommand::HELP},
-        #ifdef DEV_MODE
-        {"config", TypeCommand::CONFIG}
-        #endif
-    };
+// TODO: re-write on magic_enum
+TypeCommand CommandToEnum(const std::string& type) {
+    std::unordered_map<std::string, TypeCommand> commands = {
+        {"add", TypeCommand::ADD},   {"list", TypeCommand::LIST},     {"clear", TypeCommand::CLEAR},
+        {"done", TypeCommand::DONE}, {"remove", TypeCommand::REMOVE}, {"edit", TypeCommand::EDIT},
+        {"help", TypeCommand::HELP}, {"config", TypeCommand::CONFIG}};
 
-    if (u_map.contains(type)) {
-        return u_map[type];
+    if (commands.contains(type)) {
+        return commands[type];
     } else {
-        throw std::invalid_argument("Unknown command");
+        throw std::invalid_argument(std::format("Unknown command: {}", type));
     }
 }
 
-// Checking for the correctness of the number of arguments
-static void ValidCommandWords(const TypeCommand& check_type, int count) {
-    const std::string message = "Invalid number of command arguments";
-    switch (check_type) {
+bool IsValidCommandWords(const TypeCommand& command, int count) {
+    switch (command) {
         case TypeCommand::ADD:
         case TypeCommand::DONE:
-        case TypeCommand::REMOVE: {
-            if (count != 3) {
-                throw std::invalid_argument(message);
-            }
+        case TypeCommand::REMOVE:
+            return count != 3 ? false : true;
             break;
-        }
-        case TypeCommand::EDIT: {
-            if (count < 4) {
-                throw std::invalid_argument(message);
-            }
-        }
-        case TypeCommand::LIST: {
-            if (count > 3) {
-                throw std::invalid_argument(message);
-            }
-        }
-        #ifdef DEV_MODE
-        case TypeCommand::CONFIG: {
-            if (count < 4) {
-                throw std::invalid_argument(message);
-            }
-        }
-        #endif
-        default: {
-            throw std::invalid_argument("Unknown command");
+        case TypeCommand::EDIT:
+            return count < 4 ? false : true;
             break;
-        }
+        case TypeCommand::LIST:
+            return (count > 1 && count < 4) ? false : true;
+            break;
+        case TypeCommand::CONFIG:
+            return count < 4 ? false : true;
+            break;
+        default:
+            return false;
+            break;
     }
 }
 
-// Converting a string to a number
-static int ConvertWordInNumber(const std::string& str) {
-    int number = 0;
-    const char* first = str.data();
-    const char* last = first + str.size();
-    while (first != last && (*first == ' ' || *first == '\t')) {
-        ++first;
+int WordToNumber(const std::string& word) {
+    if (word.empty() || !std::all_of(word.begin(), word.end(), ::isdigit)) {
+        throw std::invalid_argument(std::format("Word ({}) contains non-digit characters", word));
     }
 
-    auto res = std::from_chars(first, last, number);
-    if (res.ec != std::errc() || res.ptr != last) {
-        throw std::invalid_argument("Extra chars");
+    int number;
+    auto result = std::from_chars(word.data(), word.data() + word.size(), number);
+
+    if (result.ec != std::errc()) {
+        throw std::invalid_argument(std::format("Failed to convert word ({}) to number", word));
     }
+
     return number;
 }
 
-// Converting a string to lowercase
-std::string ConvertToLower(const std::string& str) {
-    std::string convert_str = str;
-    std::locale loc;
-    for (char& c : convert_str) {
-        c = std::tolower(c, loc);
-    }
-    return convert_str;
+std::string ToLower(const std::string& str) {
+    auto to_lower = [](char c) { return std::tolower(c); };
+
+    std::string lower;
+    lower.reserve(str.size());
+
+    std::transform(str.begin(), str.end(), std::back_inserter(lower), to_lower);
+
+    return lower;
 }
 
-// Parsing the entered command
 void Parser::Parse(const int& argc, const char** argv) {
     if (argc < 2) {
         throw std::invalid_argument("No command entered");
     }
 
-    std::string type_str = ConvertToLower(std::string(argv[1]));
-    TypeCommand type = FormatInEnum(type_str);
-    ValidCommandWords(type, argc);
+    std::string type_str = ToLower(std::string(argv[1]));
+    TypeCommand type = CommandToEnum(type_str);
+    if (!IsValidCommandWords(type, argc)) {
+        throw std::invalid_argument("");
+    }
+
     switch (type) {
         case TypeCommand::ADD: {
-            command.type = type;
+            command_.type = type;
             for (int i = 2; i < argc; ++i) {
-                std::string tmp_str = ConvertToLower(std::string(argv[i]));
-                command.text_command += " " + tmp_str;
+                std::string tmp_str = ToLower(std::string(argv[i]));
+                command_.text += " " + tmp_str;
             }
             break;
         }
         case TypeCommand::LIST: {
-            command.type = type;
+            command_.type = type;
             if (argc == 3) {
-                std::string option_list = ConvertToLower(std::string(argv[2]));
-                if (option_list == "pending") { 
-                    command.option = ListOption::PENDING;}
-                else if (option_list == "completed") {
-                    command.option = ListOption::COMPLETED;
-                }
-                else{
+                std::string option_list = ToLower(std::string(argv[2]));
+                if (option_list == "pending") {
+                    command_.option = ListOption::PENDING;
+                } else if (option_list == "completed") {
+                    command_.option = ListOption::COMPLETED;
+                } else {
                     throw std::invalid_argument("Unknown list options");
                 }
             }
             break;
         }
         case TypeCommand::CLEAR: {
-            command.type = type;
+            command_.type = type;
             break;
         }
         case TypeCommand::DONE: {
-            command.type = type;
+            command_.type = type;
 
-            int number = ConvertWordInNumber(argv[2]);
+            int number = WordToNumber(argv[2]);
             if (number < 0) {
-                command.task_index = std::nullopt;
-            }
-            else {
-                command.task_index = number;
+                command_.task_index = std::nullopt;
+            } else {
+                command_.task_index = number;
             }
             break;
         }
         case TypeCommand::REMOVE: {
-            command.type = type;
-            
-            int number = ConvertWordInNumber(argv[2]);
+            command_.type = type;
+
+            int number = WordToNumber(argv[2]);
             if (number < 0) {
-                command.task_index = std::nullopt;
-            }
-            else {
-                command.task_index = number;
+                command_.task_index = std::nullopt;
+            } else {
+                command_.task_index = number;
             }
             break;
         }
         case TypeCommand::EDIT: {
-            int number = ConvertWordInNumber(argv[2]);
+            int number = WordToNumber(argv[2]);
             if (number < 0) {
-                command.task_index = std::nullopt;
-            }
-            else {
-                command.task_index = number;
+                command_.task_index = std::nullopt;
+            } else {
+                command_.task_index = number;
             }
 
             for (int i = 3; i < argc; ++i) {
-                std::string tmp_str = ConvertToLower(std::string(argv[i]));
-                command.text_command += " " + tmp_str;
+                std::string tmp_str = ToLower(std::string(argv[i]));
+                command_.text += " " + tmp_str;
             }
             break;
         }
         case TypeCommand::HELP: {
-            command.type = type;
+            command_.type = type;
             break;
         }
-        #ifdef DEV_MODE
         case TypeCommand::CONFIG: {
-            command.type = type;
-            std::string option_config = ConvertToLower(std::string(argv[2]));
-            if (option_config == "path") { 
-                command.option = ConfigOption::PATH;
-            }
-            else if (option_config == "name") {
-                command.option = ConfigOption::NAME;
-            }
-            else{
+            command_.type = type;
+            std::string option_config = ToLower(std::string(argv[2]));
+            if (option_config == "path") {
+                command_.option = ConfigOption::PATH;
+            } else if (option_config == "name") {
+                command_.option = ConfigOption::NAME;
+            } else {
                 throw std::invalid_argument("Unknown config options");
             }
 
             for (int i = 3; i < argc; ++i) {
-                std::string tmp_str = ConvertToLower(std::string(argv[i]));
-                command.text_command += " " + tmp_str;
+                std::string tmp_str = ToLower(std::string(argv[i]));
+                command_.text += " " + tmp_str;
             }
 
             break;
         }
-        #endif
         default: {
             throw std::invalid_argument("Unknown command");
             break;

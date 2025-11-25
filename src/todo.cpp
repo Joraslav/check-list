@@ -8,6 +8,7 @@
 namespace fs = std::filesystem;
 
 using namespace task;
+using namespace parser;
 
 void PrintHelp() {
     std::cout << "Todo List Manager\n";
@@ -41,10 +42,10 @@ int main(int argc, char** argv) {
         }
 
         // Обработка и действие в зависимости от команды
-        std::string command = parser::ConvertToLower(std::string(argv[1]));
-        parser::Parser parser_obj;
+        std::string command = ToLower(std::string(argv[1]));
+        Parser parser_obj;
         parser_obj.Parse(argc, argv);
-        parser::TypeCommand type_command = parser_obj.GetType();
+        TypeCommand type_command = parser_obj.GetTypeCommand();
         switch (type_command) {
             case parser::TypeCommand::ADD: {
                 manager.AddTask(parser_obj.GetTaskText());
@@ -54,7 +55,7 @@ int main(int argc, char** argv) {
             }
             case parser::TypeCommand::LIST: {
                 try {
-                    if (auto pList = std::get_if<parser::ListOption>(&parser_obj.GetOption())) {
+                    if (auto pList = std::get_if<parser::ListOption>(&parser_obj.GetCommandOption())) {
                         const auto& list_option = *pList;
                         switch (list_option) {
                             case parser::ListOption::PENDING: {
@@ -161,7 +162,7 @@ int main(int argc, char** argv) {
             }
             case parser::TypeCommand::CONFIG: {
                 try {
-                    if (auto pConfig = std::get_if<parser::ConfigOption>(&parser_obj.GetOption())) {
+                    if (auto pConfig = std::get_if<parser::ConfigOption>(&parser_obj.GetCommandOption())) {
                         const auto& config_option = *pConfig;
                         switch (config_option) {
                             case parser::ConfigOption::PATH: {
