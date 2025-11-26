@@ -27,13 +27,11 @@ RUN apt-get update && \
 
 ENV PATH="/root/.local/bin:${PATH}"
 
-RUN conan profile detect --force && \
-    conan profile update settings.compiler.cppstd=23 default
-
 COPY conanfile.txt /app/
-RUN mkdir /app/build && cd /app/build && \
-    conan install .. --build=missing -pr default
-    
+RUN mkdir -p /app/build && cd /app/build && \
+    conan profile detect --force && \
+    conan install .. --build=missing -pr default -s compiler.cppstd=23
+
 # Папка data больше не нужна
 COPY ./src /app/src
 COPY ./tests /app/tests
