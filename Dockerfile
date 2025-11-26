@@ -11,7 +11,7 @@ RUN apt-get update && \
     && \
     # add-apt-repository ppa:ubuntu-toolchain-r/test && \
     # apt-get update && \
-    # apt-get install -y \
+    apt-get install -y \
     # gcc-15 g++-15 \
     python3-pip \
     python3-full \
