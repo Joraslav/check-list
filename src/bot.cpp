@@ -11,7 +11,7 @@ int main(int argc, char* argv[]) {
     try {
         TaskManager task_manager;
 
-        Bot bot(/**/);
+        Bot bot("8483:fvfv-заглушка");
         bot.Start();
 
     } catch (const std::exception& e) {

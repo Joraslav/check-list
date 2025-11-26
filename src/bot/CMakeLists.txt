@@ -6,8 +6,9 @@ add_library(bot STATIC
     ${BOT_SOURCE}
 )
 
-target_include_directories(bot PUBLIC 
+target_include_directories(bot PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_SOURCE_DIR}/src/task
 )
 
 target_include_directories(bot PUBLIC

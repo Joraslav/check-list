@@ -42,6 +42,9 @@ set(BOT_NAME tg-bot)
 add_executable(${BOT_NAME} src/bot.cpp)
 message(STATUS "Maked ${BOT_NAME} executable")
 
+# Include directories for executables
+target_include_directories(${BOT_NAME} PRIVATE src/task)
+
 # Linking libs
 # link todo-executable
 target_link_libraries(${TODO_NAME}

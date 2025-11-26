@@ -47,12 +47,12 @@ bool IsValidCommandWords(const TypeCommand& command, int count) {
     }
 }
 
-int WordToNumber(const std::string& word) {
+size_t WordToNumber(const std::string& word) {
     if (word.empty() || !std::all_of(word.begin(), word.end(), ::isdigit)) {
         throw std::invalid_argument(std::format("Word ({}) contains non-digit characters", word));
     }
 
-    int number;
+    size_t number;
     auto result = std::from_chars(word.data(), word.data() + word.size(), number);
 
     if (result.ec != std::errc()) {
@@ -73,17 +73,19 @@ std::string ToLower(const std::string& str) {
     return lower;
 }
 
-void Parser::Parse(const int& argc, const char** argv) {
+void Parser::Parse(int& argc, char** argv) {
+    command_ = Command{};
     if (argc < 2) {
-        throw std::invalid_argument("No command entered");
+        return;
     }
 
     const std::string type_str = ToLower(std::string(argv[1]));
     const TypeCommand type = CommandToEnum(type_str);
+
     if (!IsValidCommandWords(type, argc)) {
-        const std::string messege =
+        const std::string message =
             std::format("Invalid count of arguments for command {}.", type_str);
-        throw std::invalid_argument(messege);
+        throw std::invalid_argument(message);
     }
 
     switch (type) {
@@ -91,7 +93,10 @@ void Parser::Parse(const int& argc, const char** argv) {
             command_.type = type;
             for (int i = 2; i < argc; ++i) {
                 std::string tmp_str = ToLower(std::string(argv[i]));
-                command_.text += " " + tmp_str;
+                if (i > 2) {
+                    command_.text += " ";
+                }
+                command_.text += tmp_str;
             }
             break;
         }
@@ -104,7 +109,9 @@ void Parser::Parse(const int& argc, const char** argv) {
                 } else if (option_list == "completed") {
                     command_.option = ListOption::COMPLETED;
                 } else {
-                    throw std::invalid_argument("Unknown list options");
+                    const std::string message =
+                        std::format("Unknown list options - {}", option_list);
+                    throw std::invalid_argument(message);
                 }
             }
             break;
@@ -116,36 +123,29 @@ void Parser::Parse(const int& argc, const char** argv) {
         case TypeCommand::DONE: {
             command_.type = type;
 
-            int number = WordToNumber(argv[2]);
-            if (number < 0) {
-                command_.task_index = std::nullopt;
-            } else {
-                command_.task_index = number;
-            }
+            size_t number = WordToNumber(argv[2]);
+            command_.task_index = number;
             break;
         }
         case TypeCommand::REMOVE: {
             command_.type = type;
 
-            int number = WordToNumber(argv[2]);
-            if (number < 0) {
-                command_.task_index = std::nullopt;
-            } else {
-                command_.task_index = number;
-            }
+            size_t number = WordToNumber(argv[2]);
+            command_.task_index = number;
             break;
         }
         case TypeCommand::EDIT: {
-            int number = WordToNumber(argv[2]);
-            if (number < 0) {
-                command_.task_index = std::nullopt;
-            } else {
-                command_.task_index = number;
-            }
+            command_.type = type;
+
+            size_t number = WordToNumber(argv[2]);
+            command_.task_index = number;
 
             for (int i = 3; i < argc; ++i) {
                 std::string tmp_str = ToLower(std::string(argv[i]));
-                command_.text += " " + tmp_str;
+                if (i > 3) {
+                    command_.text += " ";
+                }
+                command_.text += tmp_str;
             }
             break;
         }
@@ -161,12 +161,17 @@ void Parser::Parse(const int& argc, const char** argv) {
             } else if (option_config == "name") {
                 command_.option = ConfigOption::NAME;
             } else {
-                throw std::invalid_argument("Unknown config options");
+                const std::string message =
+                    std::format("Unknown config options - {}", option_config);
+                throw std::invalid_argument(message);
             }
 
             for (int i = 3; i < argc; ++i) {
                 std::string tmp_str = ToLower(std::string(argv[i]));
-                command_.text += " " + tmp_str;
+                if (i > 3) {
+                    command_.text += " ";
+                }
+                command_.text += tmp_str;
             }
 
             break;
@@ -177,4 +182,5 @@ void Parser::Parse(const int& argc, const char** argv) {
         }
     }
 }
+
 }  // namespace parser
