@@ -39,7 +39,9 @@ COPY CMakeLists.txt /app/
 COPY tests/CMakeLists.txt /app/tests/
 
 RUN cd /app/build && \
-    cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_TEST=ON -DDEV_MODE=OFF -DCMAKE_TOOLCHAIN_FILE=generators/conan_toolchain.cmake .. && \
+    # cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_TEST=ON -DDEV_MODE=OFF -DCMAKE_TOOLCHAIN_FILE=generators/conan_toolchain.cmake .. && \
+    # cmake --build .
+    cmake --preset conan-release .. && \
     cmake --build .
 
 RUN ctest --test-dir /app/build -C Release
