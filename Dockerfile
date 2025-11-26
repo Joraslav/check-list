@@ -9,17 +9,17 @@ RUN apt-get update && \
     lsb-release \
     wget \
     && \
-    add-apt-repository ppa:ubuntu-toolchain-r/test && \
-    apt-get update && \
-    apt-get install -y \
-    gcc-15 g++-15 \
+    # add-apt-repository ppa:ubuntu-toolchain-r/test && \
+    # apt-get update && \
+    # apt-get install -y \
+    # gcc-15 g++-15 \
     python3-pip \
     python3-full \
     pipx \
     git \
     && \
-    update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-15 100 && \
-    update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-15 100 && \
+    # update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-15 100 && \
+    # update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-15 100 && \
     # Установка последней версии CMake
     wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null && \
     apt-add-repository "deb https://apt.kitware.com/ubuntu/ $(lsb_release -cs) main" && \
