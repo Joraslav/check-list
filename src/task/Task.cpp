@@ -103,12 +103,10 @@ void TaskManager::LoadTasksFromFile(const std::string& filename) {
 }
 
 void TaskManager::AddTask(const std::string& text) {
-    // Проверяем, что текст задачи не пустой
     if (text.empty()) {
         throw std::invalid_argument("Task text cannot be empty");
     }
     
-    // Проверяем длину текста задачи
     if (text.length() > 1000) {
         throw std::invalid_argument("Task text is too long (maximum 1000 characters)");
     }

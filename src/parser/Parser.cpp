@@ -78,10 +78,12 @@ void Parser::Parse(const int& argc, const char** argv) {
         throw std::invalid_argument("No command entered");
     }
 
-    std::string type_str = ToLower(std::string(argv[1]));
-    TypeCommand type = CommandToEnum(type_str);
+    const std::string type_str = ToLower(std::string(argv[1]));
+    const TypeCommand type = CommandToEnum(type_str);
     if (!IsValidCommandWords(type, argc)) {
-        throw std::invalid_argument("");
+        const std::string messege =
+            std::format("Invalid count of arguments for command {}.", type_str);
+        throw std::invalid_argument(messege);
     }
 
     switch (type) {
