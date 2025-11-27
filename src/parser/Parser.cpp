@@ -28,6 +28,8 @@ TypeCommand CommandToEnum(const std::string& type) {
 bool IsValidCommandWords(const TypeCommand& command, int count) {
     switch (command) {
         case TypeCommand::ADD:
+            return count < 3 ? false : true;
+            break;
         case TypeCommand::DONE:
         case TypeCommand::REMOVE:
             return count != 3 ? false : true;
@@ -36,10 +38,16 @@ bool IsValidCommandWords(const TypeCommand& command, int count) {
             return count < 4 ? false : true;
             break;
         case TypeCommand::LIST:
-            return (count > 1 && count < 4) ? false : true;
+            return count > 3 ? false : true;
             break;
         case TypeCommand::CONFIG:
             return count < 4 ? false : true;
+            break;
+        case TypeCommand::HELP:
+            return count != 2 ? false : true;
+            break;
+        case TypeCommand::CLEAR:
+            return count != 2 ? false : true;
             break;
         default:
             return false;
@@ -84,7 +92,7 @@ void Parser::Parse(int& argc, char** argv) {
 
     if (!IsValidCommandWords(type, argc)) {
         const std::string message =
-            std::format("Invalid count of arguments for command {}.", type_str);
+            std::format("Invalid count of arguments for command - {}.", type_str);
         throw std::invalid_argument(message);
     }
 
@@ -92,11 +100,10 @@ void Parser::Parse(int& argc, char** argv) {
         case TypeCommand::ADD: {
             command_.type = type;
             for (int i = 2; i < argc; ++i) {
-                std::string tmp_str = ToLower(std::string(argv[i]));
                 if (i > 2) {
                     command_.text += " ";
                 }
-                command_.text += tmp_str;
+                command_.text += argv[i];
             }
             break;
         }
@@ -141,11 +148,10 @@ void Parser::Parse(int& argc, char** argv) {
             command_.task_index = number;
 
             for (int i = 3; i < argc; ++i) {
-                std::string tmp_str = ToLower(std::string(argv[i]));
                 if (i > 3) {
                     command_.text += " ";
                 }
-                command_.text += tmp_str;
+                command_.text += argv[i];
             }
             break;
         }
@@ -167,11 +173,10 @@ void Parser::Parse(int& argc, char** argv) {
             }
 
             for (int i = 3; i < argc; ++i) {
-                std::string tmp_str = ToLower(std::string(argv[i]));
                 if (i > 3) {
                     command_.text += " ";
                 }
-                command_.text += tmp_str;
+                command_.text += argv[i];
             }
 
             break;

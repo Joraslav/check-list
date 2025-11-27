@@ -280,7 +280,6 @@ void TaskManager::SetPath(const std::string& path, const std::string& config_pat
 }
 
 void TaskManager::SetName(const std::string& name, const std::string& config_path) {
-    // Проверяем существование директории конфигурации и создаем её при необходимости
     const fs::path config_dir = fs::path(config_path).parent_path();
     if (!config_dir.empty() && !fs::exists(config_dir)) {
         std::error_code ec;

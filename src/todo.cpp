@@ -42,8 +42,9 @@ int main(int argc, char** argv) {
 
         const TypeCommand type_command = parser.GetTypeCommand();
         switch (type_command) {
+            // TODO: Надо решить, что будет по дефолту выводиться! Help или таски
             case TypeCommand::HELP:
-                manager.PrintTasks();
+                PrintHelp();
                 break;
             case TypeCommand::ADD:
                 manager.AddTask(parser.GetTaskText());
@@ -87,7 +88,7 @@ int main(int argc, char** argv) {
 
                 manager.ToggleTask(index);
                 manager.Save();
-                std::cout << "Task status toggled successfully.\n";
+                std::cout << std::format("Task with index {} toggled successfully", index) << '\n';
                 break;
             }
             case TypeCommand::REMOVE: {
@@ -131,14 +132,13 @@ int main(int argc, char** argv) {
                 if (auto pConfig = std::get_if<ConfigOption>(&command_option)) {
                     const auto& config_option = *pConfig;
                     switch (config_option) {
+                        // TODO: Решить как и что проверять для параметра пути и имени
                         case ConfigOption::PATH:
-                            manager.SetPath(parser.GetTaskText(),
-                                            DEFAULT_CONFIG_DIR + "/" + DEFAULT_CONFIG_NAME);
+                            manager.SetPath(parser.GetTaskText());
                             std::cout << "Path updated successfully.\n";
                             break;
                         case ConfigOption::NAME:
-                            manager.SetName(parser.GetTaskText(),
-                                            DEFAULT_CONFIG_DIR + "/" + DEFAULT_CONFIG_NAME);
+                            manager.SetName(parser.GetTaskText());
                             std::cout << "Filename updated successfully.\n";
                             break;
                     }
