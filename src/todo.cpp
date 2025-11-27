@@ -42,7 +42,6 @@ int main(int argc, char** argv) {
 
         const TypeCommand type_command = parser.GetTypeCommand();
         switch (type_command) {
-            // TODO: Надо решить, что будет по дефолту выводиться! Help или таски
             case TypeCommand::HELP:
                 PrintHelp();
                 break;

@@ -4,18 +4,25 @@ cmake_minimum_required(VERSION 3.31.0)
 # Find or fetch GoogleTest
 find_package(GTest REQUIRED)
 
-# Create test executable
-add_executable(TaskTest
-    task_test.cpp
+add_executable(Task
+    TestTask.cpp
+)
+add_executable(Parser
+    TestParser.cpp
 )
 
-# Link libraries to the test target
-target_link_libraries(TaskTest
+target_link_libraries(Task
     PRIVATE
     task
     GTest::GTest
     GTest::Main
 )
+target_link_libraries(Parser
+    PRIVATE
+    parser
+    GTest::GTest
+    GTest::Main
+)
 
-# Add test to CTest
-add_test(NAME TaskTest COMMAND TaskTest)
+add_test(NAME Parser COMMAND Parser)
+add_test(NAME Task COMMAND Task)
