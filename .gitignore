@@ -7,5 +7,6 @@ build
 # config file
 config_todo.json
 notepad
+Code.txt
 
 CMakeUserPresets.json

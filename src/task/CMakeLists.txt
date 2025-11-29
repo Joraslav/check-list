@@ -11,6 +11,7 @@ target_include_directories(task PUBLIC
 )
 
 # Link nlohmann_json
+find_package(nlohmann_json REQUIRED)
 target_include_directories(task PRIVATE ${nlohmann_json_INCLUDE_DIRS})
 target_link_libraries(task PRIVATE nlohmann_json::nlohmann_json)
 
