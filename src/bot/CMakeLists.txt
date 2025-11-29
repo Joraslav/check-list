@@ -18,7 +18,6 @@ target_include_directories(bot PUBLIC
 )
 
 target_link_libraries(bot PRIVATE
-    Boost::system
     OpenSSL::SSL
     OpenSSL::Crypto
     nlohmann_json::nlohmann_json
