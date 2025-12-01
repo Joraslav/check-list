@@ -39,6 +39,6 @@ COPY ./tests /app/tests
 COPY CMakeLists.txt /app/
 COPY tests/CMakeLists.txt /app/tests/
 
-RUN ./scripts/build.sh
+RUN /app/scripts/build.sh
 
 RUN ctest --test-dir build/Release
