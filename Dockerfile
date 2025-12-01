@@ -39,8 +39,6 @@ COPY ./tests /app/tests
 COPY CMakeLists.txt /app/
 COPY tests/CMakeLists.txt /app/tests/
 
-RUN cd /app/build && \
-    cmake --preset conan-release -DBUILD_TEST=ON -DDEV_MODE=OFF && \
-    cmake --build --preset conan-release .
+RUN ./scripts/build.sh
 
 RUN ctest --test-dir build/Release
