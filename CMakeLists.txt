@@ -22,7 +22,7 @@ add_compile_definitions(BOOST_BEAST_USE_STD_STRING_VIEW)
 # Build options
 option(BUILD_TEST "Build tests" OFF)
 option(DEV_MODE "Using develop mode" ON)
-if(DEV_MODE AND ${CMAKE_BUILD_TYPE} STREQUAL Debug)
+if(DEV_MODE AND CMAKE_BUILD_TYPE STREQUAL "Debug")
     set(BUILD_TEST ON)
 endif()
 

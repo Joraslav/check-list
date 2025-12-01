@@ -2,22 +2,22 @@
 
 set -e  # Завершить выполнение при ошибке
 
+echo "Создание папки build"
+mkdir -p build
+
 echo "Начало сборки проекта..."
 
-# Создание директории сборки
-BUILD_DIR="build"
-echo "Создание директории сборки: $BUILD_DIR"
-mkdir -p $BUILD_DIR
+# Установка зависимостей Conan
+echo "Установка зависимостей Conan..."
+conan profile detect --force
+conan install . --build=missing -pr default -s compiler.cppstd=23
 
-# Переход в директорию сборки
-cd $BUILD_DIR
-
-# Конфигурация проекта через CMake с нужными флагами
+# Конфигурация проекта через CMake с нужными флагами и Conan presets
 echo "Конфигурация проекта через CMake..."
-cmake .. -DBUILD_TEST=ON -DDEV_MODE=OFF
+cmake --preset conan-release -DBUILD_TEST=ON -DDEV_MODE=OFF
 
 # Сборка проекта
 echo "Сборка проекта..."
-cmake --build --config Release .
+cmake --build --preset conan-release
 
 echo "Сборка завершена успешно!"

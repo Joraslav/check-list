@@ -10,7 +10,7 @@ target_include_directories(task PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-target_include_directories(task PRIVATE ${nlohmann_json_INCLUDE_DIRS})
-target_link_libraries(task PRIVATE nlohmann_json::nlohmann_json)
+target_include_directories(task PUBLIC ${nlohmann_json_INCLUDE_DIRS})
+target_link_libraries(task PUBLIC nlohmann_json::nlohmann_json)
 
 message(STATUS "Task library created")

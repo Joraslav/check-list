@@ -28,6 +28,7 @@ RUN apt-get update && \
 ENV PATH="/root/.local/bin:${PATH}"
 
 COPY conanfile.txt /app/
+COPY ./scripts /app/scripts
 RUN mkdir -p /app/build && cd /app/build && \
     conan profile detect --force && \
     conan install .. --build=missing -pr default -s compiler.cppstd=23
@@ -39,7 +40,7 @@ COPY CMakeLists.txt /app/
 COPY tests/CMakeLists.txt /app/tests/
 
 RUN cd /app/build && \
-    cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_TEST=ON -DDEV_MODE=OFF -DCMAKE_TOOLCHAIN_FILE=build/Release/generators/conan_toolchain.cmake .. && \
-    cmake --build .
+    cmake --preset conan-release -DBUILD_TEST=ON -DDEV_MODE=OFF && \
+    cmake --build --preset conan-release .
 
-RUN ctest --test-dir /app/build -C Release
+RUN ctest --test-dir build/Release
