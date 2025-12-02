@@ -32,6 +32,8 @@ COPY ./scripts /app/scripts
 COPY ./src /app/src
 COPY ./tests /app/tests
 COPY tests/CMakeLists.txt /app/tests/
+COPY LICENSE /app/LICENSE
+COPY README.md /app/README.md
 
 WORKDIR /app
 RUN chmod +x scripts/create_env.sh && chmod +x scripts/build.sh
