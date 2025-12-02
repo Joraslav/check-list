@@ -28,12 +28,10 @@ RUN apt-get update && \
 ENV PATH="/root/.local/bin:${PATH}"
 
 COPY conanfile.txt /app/
+COPY /profiles /app/profiles
 COPY ./scripts /app/scripts
-RUN mkdir -p /app/build && cd /app/build && \
-    conan profile detect --force && \
-    conan install .. --build=missing -pr default -s compiler.cppstd=23
+RUN ./app/scripts/create_env.sh Release
 
-# Папка data больше не нужна
 COPY ./src /app/src
 COPY ./tests /app/tests
 COPY CMakeLists.txt /app/
