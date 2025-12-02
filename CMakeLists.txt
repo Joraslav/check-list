@@ -74,3 +74,37 @@ endif()
 message(STATUS "Project: ${PROJECT_NAME}")
 message(STATUS "Version: ${PROJECT_VERSION}")
 message(STATUS "C++ Standard: ${CMAKE_CXX_STANDARD}")
+
+# CPack configuration for packaging and installation
+set(CPACK_PACKAGE_NAME "${PROJECT_NAME}")
+set(CPACK_PACKAGE_VENDOR "Joraslav")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Check-list application for task management and Telegram Bot")
+set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION}")
+set(CPACK_PACKAGE_CONTACT "https://github.com/Joraslav/check-list")
+set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
+set(CPACK_RESOURCE_FILE_README "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
+
+# Installation targets
+install(TARGETS ${TODO_NAME} ${BOT_NAME}
+    RUNTIME DESTINATION bin
+)
+
+# Install documentation
+install(FILES README.md README_RU.md LICENSE
+    DESTINATION share/doc/${PROJECT_NAME}
+)
+
+# CPack generators for different platforms
+if(DEV_MODE)
+    set(CPACK_GENERATOR "TGZ;DEB;NSIS")
+else()
+    if(WIN32)
+        set(CPACK_GENERATOR "NSIS")
+    elseif(UNIX AND NOT APPLE)
+        set(CPACK_GENERATOR "TGZ;DEB")
+    elseif(APPLE)
+        set(CPACK_GENERATOR "TGZ")
+    endif()
+endif()
+
+include(CPack)
