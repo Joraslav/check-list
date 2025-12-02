@@ -27,6 +27,8 @@ RUN apt-get update && \
 
 ENV PATH="/root/.local/bin:${PATH}"
 
+WORKDIR /app
+
 COPY conanfile.txt /app/
 COPY /profiles /app/profiles
 COPY ./scripts /app/scripts
