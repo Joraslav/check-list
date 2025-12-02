@@ -1,4 +1,6 @@
-# Check-List Application
+# Check-List
+
+![Логотип проекта](resources/logo.png)
 
 [![C++](https://img.shields.io/badge/C%2B%2B-23-blue.svg)](https://en.cppreference.com/w/cpp/23)
 
