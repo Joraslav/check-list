@@ -32,6 +32,7 @@ WORKDIR /app
 COPY conanfile.txt /app/
 COPY /profiles /app/profiles
 COPY ./scripts /app/scripts
+RUN chmod +x /app/scripts/create_env.sh && chmod +x /app/scripts/build.sh
 RUN ./app/scripts/create_env.sh Release
 
 COPY ./src /app/src
