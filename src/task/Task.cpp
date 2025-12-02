@@ -102,7 +102,17 @@ void TaskManager::LoadTasksFromFile(const std::string& filename) {
     fin.close();
 }
 
-void TaskManager::AddTask(const std::string& text) { tasks_.emplace_back(text, false); }
+void TaskManager::AddTask(const std::string& text) {
+    if (text.empty()) {
+        throw std::invalid_argument("Task text cannot be empty");
+    }
+    
+    if (text.length() > 1000) {
+        throw std::invalid_argument("Task text is too long (maximum 1000 characters)");
+    }
+    
+    tasks_.emplace_back(text, false);
+}
 
 void TaskManager::AddTask(const Task& task) { tasks_.emplace_back(task); }
 
@@ -270,7 +280,6 @@ void TaskManager::SetPath(const std::string& path, const std::string& config_pat
 }
 
 void TaskManager::SetName(const std::string& name, const std::string& config_path) {
-    // Проверяем существование директории конфигурации и создаем её при необходимости
     const fs::path config_dir = fs::path(config_path).parent_path();
     if (!config_dir.empty() && !fs::exists(config_dir)) {
         std::error_code ec;

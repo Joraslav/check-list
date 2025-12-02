@@ -1,14 +1,12 @@
 cmake_minimum_required(VERSION 3.31.0)
-
-# Project information
 project(check-list
-    VERSION 0.2.0
+    VERSION 0.3.0
     LANGUAGES C CXX
-    DESCRIPTION "Check-list application for task management"
+    DESCRIPTION "Check-list application for task management and Telegram Bot"
+    HOMEPAGE_URL "https://github.com/Joraslav/check-list"
 )
 
-# C++ standard requirements
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -19,90 +17,49 @@ add_compile_options(
     -pedantic
     -Wno-unused-parameter
 )
+add_compile_definitions(BOOST_BEAST_USE_STD_STRING_VIEW)
 
 # Build options
 option(BUILD_TEST "Build tests" OFF)
-option(DEV_MODE "Using develope mode" ON)
-
-# Project directories
-set(PROJECT_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")
-set(PROJECT_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
-
-# Task module directories
-set(TASK_INCLUDE_DIR "${PROJECT_INCLUDE_DIR}/task")
-set(TASK_SOURCE_DIR "${PROJECT_SOURCE_DIR}/task")
-
-# Find or fetch nlohmann_json
-find_package(nlohmann_json QUIET)
-if(NOT nlohmann_json_FOUND)
-    message(STATUS "nlohmann_json not found. Trying to download...")
-    include(FetchContent)
-    FetchContent_Declare(
-        nlohmann_json
-        GIT_REPOSITORY https://github.com/nlohmann/json.git
-        GIT_TAG v3.11.3
-    )
-    FetchContent_MakeAvailable(nlohmann_json)
-    message(STATUS "nlohmann_json downloaded and ready to use.")
-else()
-    message(STATUS "nlohmann_json found ^_^. Version: ${nlohmann_json_VERSION}")
+option(DEV_MODE "Using develop mode" ON)
+if(DEV_MODE AND CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(BUILD_TEST ON)
 endif()
 
-# Create task library
-add_library(task STATIC
-    "${TASK_INCLUDE_DIR}/Task.hpp"
-    "${TASK_SOURCE_DIR}/Task.cpp"
-)
+# Find packages
+find_package(nlohmann_json REQUIRED)
+find_package(Boost REQUIRED COMPONENTS system)
+find_package(OpenSSL REQUIRED)
 
-target_include_directories(task
-    PUBLIC
-    "$<BUILD_INTERFACE:${TASK_INCLUDE_DIR}>"
-    "$<INSTALL_INTERFACE:include>"
-)
+# Add subdirectories for each module
+add_subdirectory(src/task)
+add_subdirectory(src/parser)
+add_subdirectory(src/bot)
 
-target_link_libraries(task
-    PUBLIC
-    nlohmann_json::nlohmann_json
-)
+# Create executables
+set(TODO_NAME todo)
+add_executable(${TODO_NAME} src/todo.cpp)
+message(STATUS "Maked ${TODO_NAME} executable")
 
-# Create main executable
-set(CONSOLE_NAME todo)
-add_executable(${CONSOLE_NAME}
-    src/main.cpp
-)
+set(BOT_NAME tg-bot)
+add_executable(${BOT_NAME} src/bot.cpp)
+message(STATUS "Maked ${BOT_NAME} executable")
 
-target_include_directories(${CONSOLE_NAME}
-    PRIVATE
-    ${TASK_INCLUDE_DIR}
-)
+# Include directories for executables
+target_include_directories(${BOT_NAME} PRIVATE src/task)
 
-target_link_libraries(${CONSOLE_NAME}
+# Linking libs
+# link todo-executable
+target_link_libraries(${TODO_NAME}
     PRIVATE
     task
+    parser
 )
 
-# Installation rules
-include(GNUInstallDirs)
-install(TARGETS ${CONSOLE_NAME}
-    EXPORT ${PROJECT_NAME}-targets
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)
-
-# Note: task library is not exported because it depends on nlohmann_json which is fetched externally
-# Users of the installed package should fetch nlohmann_json separately if they want to use the task library
-# For most users, the todo executable is sufficient
-
-install(DIRECTORY ${PROJECT_INCLUDE_DIR}/
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
-    FILES_MATCHING PATTERN "*.hpp"
-)
-
-install(EXPORT ${PROJECT_NAME}-targets
-    FILE ${PROJECT_NAME}-targets.cmake
-    NAMESPACE ${PROJECT_NAME}::
-    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
+# link bot-executable
+target_link_libraries(${BOT_NAME}
+    PRIVATE
+    bot
 )
 
 # Enable testing if requested
@@ -113,36 +70,31 @@ if(BUILD_TEST)
     add_subdirectory(tests)
 endif()
 
-# CPack configuration
-set(CPACK_PROJECT_NAME ${PROJECT_NAME})
-set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
+# Display project information
+message(STATUS "Project: ${PROJECT_NAME}")
+message(STATUS "Version: ${PROJECT_VERSION}")
+message(STATUS "C++ Standard: ${CMAKE_CXX_STANDARD}")
 
-# General CPack settings
-set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Check-list application for task management")
-set(CPACK_PACKAGE_VENDOR "Dol")
-set(CPACK_PACKAGE_CONTACT "yar.mozg2002@gmail.com")
-set(CPACK_PACKAGE_INSTALL_DIRECTORY "${CPACK_PACKAGE_NAME}")
+# CPack configuration for packaging and installation
+set(CPACK_PACKAGE_NAME "${PROJECT_NAME}")
+set(CPACK_PACKAGE_VENDOR "Joraslav")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Check-list application for task management and Telegram Bot")
+set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION}")
+set(CPACK_PACKAGE_CONTACT "https://github.com/Joraslav/check-list")
+set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
+set(CPACK_RESOURCE_FILE_README "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
 
-# Component settings
-set(CPACK_COMPONENTS_ALL applications)
-set(CPACK_COMPONENT_APPLICATIONS_DISPLAY_NAME "Check List")
-set(CPACK_COMPONENT_APPLICATIONS_DESCRIPTION "The main check list")
+# Installation targets
+install(TARGETS ${TODO_NAME}
+    RUNTIME DESTINATION bin
+)
 
-# Debian package settings
-set(CPACK_DEBIAN_PACKAGE_MAINTAINER "Yaroslav Moskalev yar.mozg2002@gmail.com")
-set(CPACK_DEBIAN_PACKAGE_SECTION "devel")
-set(CPACK_DEBIAN_PACKAGE_PRIORITY "optional")
-set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS OFF)
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "libc6 (>= 2.2.1)")
+# Install documentation
+install(FILES README.md README_RU.md LICENSE
+    DESTINATION share/doc/${PROJECT_NAME}
+)
 
-# Windows package settings
-set(CPACK_NSIS_DISPLAY_NAME "Check List")
-set(CPACK_NSIS_PACKAGE_NAME "Check List")
-set(CPACK_NSIS_CONTACT "yar.mozg2002@gmail.com")
-set(CPACK_NSIS_ENABLE_UNINSTALL_BEFORE_INSTALL ON)
-set(CPACK_NSIS_MODIFY_PATH ON)
-
-# Package generators
+# CPack generators for different platforms
 if(DEV_MODE)
     set(CPACK_GENERATOR "TGZ;DEB;NSIS")
 else()
@@ -155,10 +107,4 @@ else()
     endif()
 endif()
 
-
 include(CPack)
-
-# Display project information
-message(STATUS "Project: ${PROJECT_NAME}")
-message(STATUS "Version: ${PROJECT_VERSION}")
-message(STATUS "C++ Standard: ${CMAKE_CXX_STANDARD}")
