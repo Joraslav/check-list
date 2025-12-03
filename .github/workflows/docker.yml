@@ -1,10 +1,10 @@
-name: Docker Build
+name: Docker Build and Test
 
 on:
   push:
-    branches: ["telegram", "main"]
+    branches: ["main"]
   pull_request:
-    branches: ["telegram", "main"]
+    branches: ["main"]
 
 permissions:
   checks: write
@@ -15,7 +15,7 @@ permissions:
 jobs:
   docker-build:
     runs-on: ubuntu-24.04
-
+    
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -23,16 +23,110 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build Docker image
+      - name: Cache Docker layers
+        uses: actions/cache@v3
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: check-list
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build Docker image with layer caching
+        id: build
         uses: docker/build-push-action@v5
         with:
           context: .
           push: false
           load: true
-          tags: check-list:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=check-list-build
+          cache-to: type=gha,scope=check-list-build,mode=max
+          target: build
 
-      - name: Run tests in Docker
+      - name: Run tests in Docker with detailed output
+        id: test
         run: |
-          docker run --rm check-list:latest ctest --test-dir /app/build -C Release
+          echo "Running tests with detailed output..."
+          docker run --rm ${{ steps.meta.outputs.tags }} ctest --test-dir /app/build/Release --output-on-failure -V
+          
+      - name: Generate test report
+        if: always()
+        run: |
+          echo "Generating test report..."
+          docker run --rm ${{ steps.meta.outputs.tags }} ctest --test-dir /app/build/Release --show-only=json --output-log test-results.log > test-results.json || true
+          
+      - name: Publish test results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: always()
+        with:
+          files: test-results.json
+
+      - name: Build production image with caching
+        id: production
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: false
+          load: true
+          tags: check-list:production
+          cache-from: type=gha,scope=check-list-production
+          cache-to: type=gha,scope=check-list-production,mode=max
+          target: production
+
+      - name: Analyze build results
+        run: |
+          echo "Build completed for Release configuration"
+          echo "Docker image built successfully"
+          
+      - name: Upload test results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: test-results
+          path: |
+            test-results.json
+            test-results.log
+          if-no-files-found: ignore
+
+  security-scan:
+    runs-on: ubuntu-24.04
+    needs: docker-build
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v2
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  deploy:
+    runs-on: ubuntu-24.04
+    needs: [docker-build, security-scan]
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Deploy notification
+        run: |
+          echo "All tests passed and security scan completed"
+          echo "Ready for deployment"
