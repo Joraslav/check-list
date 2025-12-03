@@ -7,20 +7,24 @@ RUN apt-get update && \
     ca-certificates \
     gnupg \
     lsb-release \
-    wget \
+    wget
+
+RUN apt-get install -y \
     python3-pip \
     python3-full \
     pipx \
     git \
     && \
-    wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null && \
     apt-add-repository "deb https://apt.kitware.com/ubuntu/ $(lsb_release -cs) main" && \
     apt-get update && \
     apt-get install -y cmake && \
-    pipx install conan==2.22.2 && \
-    pipx ensurepath && \
-    cmake --version && \
     rm -rf /var/lib/apt/lists/*
+
+RUN pipx install conan==2.22.2 && \
+    pipx ensurepath
 
 ENV PATH="/root/.local/bin:${PATH}"
 
