@@ -44,24 +44,19 @@ jobs:
           cache-to: type=gha,scope=check-list-build,mode=max
           target: test
 
-      - name: Run tests in Docker with detailed output
+      - name: Run tests in Docker
         id: test
         run: |
-          echo "Running tests with detailed output..."
-          docker run --rm check-list:latest ctest --test-dir /app/build/Release --output-on-failure -V
+          echo "Running tests..."
+          docker run --rm check-list:latest > test-output.log 2>&1
+          echo "Test execution completed"
 
-      - name: Generate test report
-        if: always()
-        run: |
-          echo "Generating test report..."
-          # Create a simple JSON report
-          echo '{"name": "Test Results", "status": "completed"}' > test-results.json
-
-      - name: Publish test results
-        uses: EnricoMi/publish-unit-test-result-action@v2
+      - name: Upload test output as artifact
+        uses: actions/upload-artifact@v4
         if: always()
         with:
-          files: test-results.json
+          name: test-output
+          path: test-output.log
 
       - name: Build production image with caching
         id: production
@@ -79,14 +74,6 @@ jobs:
         run: |
           echo "Build completed for Release configuration"
           echo "Docker image built successfully"
-
-      - name: Upload test results
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: test-results
-          path: test-results.json
-          if-no-files-found: ignore
 
   security-scan:
     runs-on: ubuntu-24.04
