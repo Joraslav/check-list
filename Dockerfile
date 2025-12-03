@@ -64,8 +64,8 @@ RUN ./scripts/create_env.sh Release && \
 # Test stage
 FROM build AS test
 WORKDIR /app
-# Set entrypoint to run tests by default
-ENTRYPOINT ["ctest", "--test-dir", "build/Release", "--output-on-failure"]
+# Run tests with verbose output
+CMD ["ctest", "--test-dir", "build/Release", "--output-on-failure", "-V"]
 
 # Production stage
 FROM ubuntu:24.04 AS production

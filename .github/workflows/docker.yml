@@ -44,12 +44,37 @@ jobs:
           cache-to: type=gha,scope=check-list-build,mode=max
           target: test
 
-      - name: Run tests in Docker
+      - name: Run tests in Docker with detailed output
         id: test
         run: |
-          echo "Running tests..."
+          echo "Running tests with detailed output..."
           docker run --rm check-list:latest > test-output.log 2>&1
           echo "Test execution completed"
+          cat test-output.log
+
+      - name: Parse test results and create summary
+        run: |
+          echo "## Test Results Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Count total tests
+          total_tests=$(grep -c "Test #" test-output.log || echo "0")
+          echo "Total tests: $total_tests" >> $GITHUB_STEP_SUMMARY
+          
+          # Count passed tests
+          passed_tests=$(grep -c "Test passed" test-output.log || echo "0")
+          echo "Passed tests: $passed_tests" >> $GITHUB_STEP_SUMMARY
+          
+          # Count failed tests
+          failed_tests=$(grep -c "Test failed" test-output.log || echo "0")
+          echo "Failed tests: $failed_tests" >> $GITHUB_STEP_SUMMARY
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Detailed Output" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cat test-output.log >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
 
       - name: Upload test output as artifact
         uses: actions/upload-artifact@v4
