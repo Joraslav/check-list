@@ -42,6 +42,7 @@ WORKDIR /app
 
 RUN chmod +x scripts/create_env.sh && chmod +x scripts/build.sh
 RUN ./scripts/create_env.sh Release
+RUN ./scripts/build.sh
 
 FROM build AS test
 RUN ctest --test-dir build/Release --output-on-failure
