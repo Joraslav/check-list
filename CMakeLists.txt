@@ -28,8 +28,16 @@ endif()
 
 # Find packages
 find_package(nlohmann_json REQUIRED)
-find_package(Boost REQUIRED COMPONENTS system)
-find_package(OpenSSL REQUIRED)
+find_package(tgbot QUIET)
+if(NOT ${tgbot_FOUND})
+    set(CMAKE_MODULE_PATH ${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE}/generator)
+    find_package(tgbot QUIET)
+    if(NOT ${tgbot_FOUND})
+        message(FATAL_ERROR "Lib tgBot not found. Execute 'create_env'")
+    endif()
+endif()
+# find_package(Boost REQUIRED COMPONENTS system)
+# find_package(OpenSSL REQUIRED)
 
 # Add subdirectories for each module
 add_subdirectory(src/task)
