@@ -79,7 +79,6 @@ RUN apt-get update && \
 
 # Copy the built application from the build stage
 COPY --from=build /app/build/Release/todo /usr/local/bin/todo
-COPY --from=build /app/build/Release/tg-bot /usr/local/bin/tg-bot
 
 # Set the default command
 CMD ["todo"]
