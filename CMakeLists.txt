@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.31.0)
 project(check-list
-    VERSION 0.3.0
+    VERSION 0.3.1
     LANGUAGES C CXX
     DESCRIPTION "Check-list application for task management and Telegram Bot"
     HOMEPAGE_URL "https://github.com/Joraslav/check-list"
@@ -28,25 +28,15 @@ endif()
 
 # Find packages
 find_package(nlohmann_json REQUIRED)
-find_package(Boost REQUIRED COMPONENTS system)
-find_package(OpenSSL REQUIRED)
 
 # Add subdirectories for each module
 add_subdirectory(src/task)
 add_subdirectory(src/parser)
-add_subdirectory(src/bot)
 
 # Create executables
 set(TODO_NAME todo)
 add_executable(${TODO_NAME} src/todo.cpp)
 message(STATUS "Maked ${TODO_NAME} executable")
-
-set(BOT_NAME tg-bot)
-add_executable(${BOT_NAME} src/bot.cpp)
-message(STATUS "Maked ${BOT_NAME} executable")
-
-# Include directories for executables
-target_include_directories(${BOT_NAME} PRIVATE src/task)
 
 # Linking libs
 # link todo-executable
@@ -54,12 +44,6 @@ target_link_libraries(${TODO_NAME}
     PRIVATE
     task
     parser
-)
-
-# link bot-executable
-target_link_libraries(${BOT_NAME}
-    PRIVATE
-    bot
 )
 
 # Enable testing if requested
