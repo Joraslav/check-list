@@ -8,10 +8,9 @@
 
 ## Description
 
-Check-List is a multifunctional task management application that provides two ways to interact:
+Check-List is a multifunctional task management application
 
-1. **Command Line Interface (CLI)** - for local task management
-2. **Telegram Bot** - for managing tasks through the Telegram messenger
+- **Command Line Interface (CLI)** - for local task management
 
 The application allows you to create, view, edit, mark as completed, and delete tasks. All data is stored in JSON format, which ensures easy storage and portability.
 
@@ -29,15 +28,9 @@ The application allows you to create, view, edit, mark as completed, and delete 
 - Setting the path for task files storage
 - Setting the filename for the task list
 
-### Telegram Bot (tg-bot)
-
-- All basic CLI utility functions available through Telegram
-- Convenient interaction through bot commands
-- Ability to manage tasks from anywhere via messenger
-
 ## Build Requirements
 
-### Linux (Ubuntu/Debian)
+### Linux
 
 The following dependencies are required to build the project:
 
@@ -45,16 +38,14 @@ The following dependencies are required to build the project:
 - **CMake** version 3.31 or higher
 - **Conan** version 2.22.2 or higher
 - **Python 3** (for Conan)
-- **Git** (for cloning the repository)
 
 ### Project Dependencies
 
 The project uses the following libraries:
 
-- **Boost** 1.89.0 (system, beast libraries)
-- **OpenSSL** 3.6.0
 - **nlohmann_json** 3.12.0
 - **magic_enum** 0.9.7
+- **GTest** 1.17.0 (For tests)
 
 All dependencies are automatically installed via Conan during project build.
 
@@ -147,28 +138,17 @@ After building, the `todo` executable will be located in the `build/Release/` di
 ./todo config name "my_todo_list.json"
 ```
 
-### Telegram Bot
-
-The `tg-bot` executable will also be located in the `build/Release/` directory:
-
-```bash
-./tg-bot <bot_token>
-```
-
-**Important:** To run the bot, you need to specify a valid Telegram bot token in the code (in the `src/bot.cpp` file).
-
 ## Project Structure
 
 ```planetext
 check-list/
 ├── src/
 │   ├── task/          # Task management module
-│   ├── parser/        # Command line parser
-│   └── bot/           # Telegram bot
+│   └──parser/         # Command line parser
 ├── tests/             # Unit tests
 ├── scripts/           # Build and setup scripts
 ├── profiles/          # Conan build profiles
-├── resources/          # Project resources
+├── resources/         # Project resources
 ├── CMakeLists.txt     # Main CMake build file
 ├── conanfile.txt      # Project dependencies
 └── Dockerfile         # Docker file for building
