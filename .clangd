@@ -1,0 +1,47 @@
+CompileFlags:
+  CompilationDatabase: .
+  Add:
+    - -std=c++26
+    - -Wall
+    - -Wextra
+    - -Wpedantic
+    - -freflection
+  Remove:
+    - -Werror
+    - -fmodules-ts
+    - -fmodule-mapper=*
+    - -fdeps-format=*
+
+Index:
+  Background: Build
+  StandardLibrary: true
+
+Diagnostics:
+  UnusedIncludes: Strict
+  MissingIncludes: None
+  ClangTidy:
+    FastCheckFilter: Strict
+    CheckOptions:
+      readability-identifier-naming.ScopedEnumConstantCase: CamelCase
+      readability-identifier-naming.EnumConstantCase: CamelCase
+
+Completion:
+  AllScopes: true
+  ArgumentLists: FullPlaceholders
+  HeaderInsertion: IWYU
+  CodePatterns: All
+
+InlayHints:
+  Enabled: true
+  ParameterNames: true
+  DeducedTypes: true
+  Designators: true
+  BlockEnd: true
+  DefaultArguments: true
+  TypeNameLimit: 32
+
+Hover:
+  ShowAKA: false
+
+Documentation:
+  CommentFormat: Doxygen

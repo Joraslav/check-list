@@ -1,0 +1,143 @@
+---
+Checks: >
+  -*,
+  clang-analyzer-*,
+  bugprone-*,
+  performance-*,
+  portability-*,
+  readability-*,
+  modernize-*,
+  cppcoreguidelines-*,
+  misc-*,
+  concurrency-*,
+  hicpp-*,
+  cert-*,
+  -abseil-*,
+  -fuchsia-*,
+  -google-*,
+  -llvm-*,
+  -zircon-*,
+  -hicpp-avoid-c-arrays,
+  -cppcoreguidelines-avoid-c-arrays,
+  -cppcoreguidelines-owning-memory,
+  -cppcoreguidelines-pro-bounds-array-to-pointer-decay,
+  -cppcoreguidelines-avoid-magic-numbers,
+  -readability-magic-numbers,
+  -modernize-use-trailing-return-type,
+  -readability-identifier-length,
+  -readability-implicit-bool-conversion,
+  -misc-unused-parameters,
+  -portability-avoid-pragma-once
+
+WarningsAsErrors: '*'
+HeaderFilterRegex: '^(?!.*(/build/|/CMakeFiles/|/\.cache/)).*'
+ExcludeHeaderFilterRegex: '(/build/|/CMakeFiles/|/\.cache/)'
+FormatStyle: file
+InheritParentConfig: false
+
+CheckOptions:
+  - key:             readability-identifier-naming.NamespaceCase
+    value:           lower_case
+  - key:             readability-identifier-naming.ClassCase
+    value:           CamelCase
+  - key:             readability-identifier-naming.StructCase
+    value:           CamelCase
+  - key:             readability-identifier-naming.EnumCase
+    value:           CamelCase
+  - key:             readability-identifier-naming.FunctionCase
+    value:           CamelCase
+  - key:             readability-identifier-naming.MethodCase
+    value:           CamelCase
+  - key:             readability-identifier-naming.VariableCase
+    value:           lower_case
+  - key:             readability-identifier-naming.ParameterCase
+    value:           lower_case
+  - key:             readability-identifier-naming.MemberCase
+    value:           lower_case
+  - key:             readability-identifier-naming.PrivateMemberSuffix
+    value:           _
+  - key:             readability-identifier-naming.ConstantCase
+    value:           lower_case
+  - key:             readability-identifier-naming.ConstantPrefix
+    value:           ''
+  - key:             readability-identifier-naming.GlobalConstantCase
+    value:           CamelCase
+  - key:             readability-identifier-naming.GlobalConstantPrefix
+    value:           k
+  - key:             readability-identifier-naming.ConstantIgnoredRegexp
+    value:           '^[A-Z][A-Z0-9_]*$'
+  - key:             readability-identifier-naming.LocalConstantCase
+    value:           aNy_CasE
+  - key:             readability-identifier-naming.LocalConstantPrefix
+    value:           ''
+  - key:             readability-identifier-naming.ScopedEnumConstantCase
+    value:           CamelCase
+  - key:             readability-identifier-naming.EnumConstantCase
+    value:           CamelCase
+
+  - key:             modernize-use-nullptr.NullMacros
+    value:           'NULL'
+  - key:             modernize-loop-convert.MaxCopySize
+    value:           '32'
+  - key:             modernize-pass-by-value.IncludeStyle
+    value:           llvm
+  - key:             modernize-replace-auto-ptr.IncludeStyle
+    value:           llvm
+  - key:             modernize-use-override.IgnoreDestructors
+    value:           '0'
+
+  - key:             performance-for-range-copy.WarnOnAllAutoCopies
+    value:           '1'
+  - key:             performance-inefficient-vector-operation.WarnOnReserveNotCalled
+    value:           '1'
+  - key:             performance-move-const-arg.CheckTriviallyCopyableMove
+    value:           '1'
+
+  - key:             bugprone-assert-side-effect.AssertMacros
+    value:           'assert;ASSERT_TRUE;ASSERT_FALSE;ASSERT_EQ;ASSERT_NE;ASSERT_LT;ASSERT_LE;ASSERT_GT;ASSERT_GE'
+  - key:             bugprone-exception-escape.FunctionsThatShouldNotThrow
+    value:           'main'
+  - key:             bugprone-macro-parentheses.IgnoreCommandLikeMacros
+    value:           '1'
+  - key:             bugprone-sizeof-expression.WarnOnSizeOfPointerToAggregate
+    value:           '1'
+  - key:             bugprone-suspicious-include.HeaderFileExtensions
+    value:           'h;hh;hpp;hxx'
+  - key:             bugprone-suspicious-include.ImplementationFileExtensions
+    value:           'c;cc;cpp;cxx'
+  - key:             bugprone-easily-swappable-parameters.MinimumLength
+    value:           2
+
+  - key:             cppcoreguidelines-special-member-functions.AllowSoleDefaultDtor
+    value:           '1'
+  - key:             cppcoreguidelines-pro-type-member-init.IgnoreArrays
+    value:           '1'
+  - key:             cppcoreguidelines-init-variables.IncludeStyle
+    value:           llvm
+
+  - key:             readability-else-after-return.WarnOnConditionVariables
+    value:           '1'
+  - key:             readability-function-cognitive-complexity.Threshold
+    value:           '25'
+  - key:             readability-function-cognitive-complexity.DescribeBasicIncrements
+    value:           '1'
+  - key:             readability-function-size.LineThreshold
+    value:           '220'
+  - key:             readability-function-size.StatementThreshold
+    value:           '120'
+  - key:             readability-function-size.BranchThreshold
+    value:           '35'
+  - key:             readability-function-size.ParameterThreshold
+    value:           '8'
+  - key:             readability-qualified-auto.AddConstToQualified
+    value:           '1'
+
+  - key:             misc-const-correctness.AnalyzeValues
+    value:           '1'
+  - key:             misc-const-correctness.WarnPointersAsValues
+    value:           '1'
+  - key:             misc-definitions-in-headers.UseHeaderFileExtension
+    value:           '1'
+
+  - key:             hicpp-special-member-functions.AllowSoleDefaultDtor
+    value:           '1'
