@@ -12,8 +12,12 @@ function(find_lib LIB_NAME)
   endif()
 endfunction()
 
-# ADD_LOGGER_LIBRARY(<name> SOURCES <files...> [INCLUDE_DIR <dir>] [DEPS <targets...>])
-# Creates STATIC target <name> with alias logger::<name>; headers live next to sources.
+# add_my_library(<name> SOURCES <files...>
+# [INCLUDE_DIR <dir>]
+# [DEPS <targets...>]
+# )
+# Creates STATIC target <name> with alias ${PROJECT_NAME}::<name>;
+# headers live next to sources.
 function(add_my_library TARGET_NAME)
   cmake_parse_arguments(ARG "" "INCLUDE_DIR" "SOURCES;DEPS" ${ARGN})
 
@@ -22,7 +26,7 @@ function(add_my_library TARGET_NAME)
   endif()
 
   add_library(${TARGET_NAME} STATIC ${ARG_SOURCES})
-  add_library(talker::${TARGET_NAME} ALIAS ${TARGET_NAME})
+  add_library(${PROJECT_NAME}::${TARGET_NAME} ALIAS ${TARGET_NAME})
   target_include_directories(${TARGET_NAME} PUBLIC
     $<BUILD_INTERFACE:${ARG_INCLUDE_DIR}>
   )
@@ -39,14 +43,18 @@ function(add_header_only_library TARGET_NAME)
   endif()
 
   add_library(${TARGET_NAME} INTERFACE)
-  add_library(talker::${TARGET_NAME} ALIAS ${TARGET_NAME})
+  add_library(${PROJECT_NAME}::${TARGET_NAME} ALIAS ${TARGET_NAME})
   target_include_directories(${TARGET_NAME} INTERFACE
     $<BUILD_INTERFACE:${ARG_INCLUDE_DIR}>
   )
   target_link_libraries(${TARGET_NAME} INTERFACE ${ARG_DEPS})
 endfunction()
 
-# ADD_SERVICE(<name> MAIN <file> [DOMAIN_SOURCES <files...>] [EXECUTABLE <name>] [DEPS <targets...>])
+# ADD_SERVICE(<name> MAIN <file>
+# [DOMAIN_SOURCES <files...>]
+# [EXECUTABLE <name>]
+# [DEPS <targets...>]
+# )
 # Creates an optional testable STATIC <name>_domain library and an executable
 # (default <name>-service).
 function(add_service SERVICE_NAME)
@@ -70,7 +78,9 @@ endfunction()
 
 # ADD_GTEST_TARGET(<name> [SOURCES <files...>] [LINK_LIBS <targets...>] [COMPILE_DEFINITIONS <defs...>])
 function(add_gtest_target TEST_NAME)
-  cmake_parse_arguments(ARG "" "" "SOURCES;LINK_LIBS;COMPILE_DEFINITIONS" ${ARGN})
+  cmake_parse_arguments(ARG "" "" 
+  "SOURCES;LINK_LIBS;COMPILE_DEFINITIONS"
+  ${ARGN})
 
   if(NOT ARG_SOURCES)
     set(ARG_SOURCES ${TEST_NAME}.cpp)
